@@ -469,7 +469,7 @@
                     @foreach($tinmoinhat as $tmn)
                         <div class="carousel-item">
                             <a href="vanban/tinmoinhat">
-                            <img style="width: 840px; height: 420px;" class="d-block w-100" src="../public/tinmoinhat/img/{{$tmn->imgname}}" alt="Second slide">
+                            <img style="width: 840px; height: 420px;" class="d-block w-100" src="tinmoinhat/img/{{$tmn->imgname}}" alt="Second slide">
                             </a>
                             <div class="carousel-caption d-none d-md-block">
                                 <a style="color: #fff; font-size: 24px" href="vanban/tinmoinhat"><h1>{{$tmn->tieude}}</h1></a>
@@ -573,7 +573,7 @@
             {{-- img --}}
             <div class="margin-bottom">
                 <div class="nv-block-banners">
-                    <img alt="Học tập và làm theo tấm gương đạo đức Hồ Chí Minh" src="../public/images/baner_tam-guong-dao-duc_1.jpg" width="790">
+                    <img alt="Học tập và làm theo tấm gương đạo đức Hồ Chí Minh" src="images/baner_tam-guong-dao-duc_1.jpg" width="790">
                 </div>
 
             </div>
@@ -591,7 +591,7 @@
                         <div class="row">
                             <div class="col-md-16 ">
                             @foreach($tinnhatruongnew as $tntn)
-                                <a title="{{$tntn->tieude}}" href="vanban/tinnhatruong/{{$tntn->tieude}}/{{$tntn->filename}}"><img src="../public/tinnhatruong/img/{{$tntn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
+                                <a title="{{$tntn->tieude}}" href="vanban/tinnhatruong/{{$tntn->tieude}}/{{$tntn->filename}}"><img src="tinnhatruong/img/{{$tntn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
                                 </a>
                                 <h3>
                                     <a title="{{$tntn->tieude}}" href="vanban/tinnhatruong/{{$tntn->tieude}}/{{$tntn->filename}}" >{{$tntn->tieude}}</a>
@@ -602,7 +602,7 @@
                                 <ul class="related">
                                     @foreach($tinnhatruong as $tnt)
                                     <li class="icon_list">
-                                        <a class="show h4" href="vanban/tinnhatruong/{{$tnt->tieude}}/{{$tnt->filename}}" title="{{$tnt->tieude}}" data-content="" data-img="../public/tinnhatruong/vanban/{{$tnt->filename}}" data-rel="tooltip" data-placement="top">{{$tnt->tieude}}</a>
+                                        <a class="show h4" href="vanban/tinnhatruong/{{$tnt->tieude}}/{{$tnt->filename}}" title="{{$tnt->tieude}}" data-content="" data-img="tinnhatruong/vanban/{{$tnt->filename}}" data-rel="tooltip" data-placement="top">{{$tnt->tieude}}</a>
                                     </li>
                                     @endforeach
                                 </ul>
@@ -625,7 +625,7 @@
                         <div class="row">
                             <div class="col-md-16 ">
                             @foreach($congdoannew as $cdn)
-                                <a title="{{$cdn->tieude}}" href="vanban/congdoan/{{$cdn->tieude}}/{{$cdn->filename}}"><img src="../public/congdoan/img/{{$cdn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
+                                <a title="{{$cdn->tieude}}" href="vanban/congdoan/{{$cdn->tieude}}/{{$cdn->filename}}"><img src="congdoan/img/{{$cdn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
                                 </a>
                                 <h3>
                                     <a title="{{$cdn->tieude}}" href="vanban/congdoan/{{$cdn->tieude}}/{{$cdn->filename}}" >{{$cdn->tieude}}</a>
@@ -636,7 +636,7 @@
                                 <ul class="related">
                                     @foreach($congdoan as $cd)
                                     <li class="icon_list">
-                                        <a class="show h4" href="vanban/congdoan/{{$cd->tieude}}/{{$cd->filename}}" title="{{$cd->tieude}}" data-content="" data-img="../public/congdoan/vanban/{{$cd->filename}}" data-rel="tooltip" data-placement="top">{{$cd->tieude}}</a>
+                                        <a class="show h4" href="vanban/congdoan/{{$cd->tieude}}/{{$cd->filename}}" title="{{$cd->tieude}}" data-content="" data-img="congdoan/vanban/{{$cd->filename}}" data-rel="tooltip" data-placement="top">{{$cd->tieude}}</a>
                                     </li>
                                     @endforeach
                                 </ul>
@@ -659,7 +659,7 @@
                         <div class="row">
                             <div class="col-md-16 ">
                             @foreach($tindoanthenew as $tdtn)
-                                <a title="{{$tdtn->tieude}}" href="vanban/tindoanthe/{{$tdtn->tieude}}/{{$tdtn->filename}}"><img src="../public/tindoanthe/img/{{$tdtn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
+                                <a title="{{$tdtn->tieude}}" href="vanban/tindoanthe/{{$tdtn->tieude}}/{{$tdtn->filename}}"><img src="tindoanthe/img/{{$tdtn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
                                 </a>
                                 <h3>
                                     <a title="{{$tdtn->tieude}}" href="vanban/tindoanthe/{{$tdtn->tieude}}/{{$tdtn->filename}}" >{{$tdtn->tieude}}</a>
@@ -670,7 +670,7 @@
                                 <ul class="related">
                                     @foreach($tindoanthe as $tdt)
                                     <li class="icon_list">
-                                        <a class="show h4" href="vanban/tindoanthe/{{$tdt->tieude}}/{{$tdt->filename}}" title="{{$tdt->tieude}}" data-content="" data-img="../public/tindoanthe/vanban/{{$tdt->filename}}" data-rel="tooltip" data-placement="top">{{$tdt->tieude}}</a>
+                                        <a class="show h4" href="vanban/tindoanthe/{{$tdt->tieude}}/{{$tdt->filename}}" title="{{$tdt->tieude}}" data-content="" data-img="tindoanthe/vanban/{{$tdt->filename}}" data-rel="tooltip" data-placement="top">{{$tdt->tieude}}</a>
                                     </li>
                                     @endforeach
                                 </ul>
@@ -694,7 +694,7 @@
                             <div class="col-md-16 ">
                             @foreach($hdngllnew as $datahdn)
                             
-                                <a title="{{$datahdn->tieude}}" href="vanban/hdngoaigiolenlop/{{$datahdn->tieude}}/{{$datahdn->filename}}"><img src="../public/hdngoaigiolenlop/img/{{$datahdn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
+                                <a title="{{$datahdn->tieude}}" href="vanban/hdngoaigiolenlop/{{$datahdn->tieude}}/{{$datahdn->filename}}"><img src="hdngoaigiolenlop/img/{{$datahdn->imgname}}" alt="" style="width: 210px; height: 300px;"  class="img-thumbnail pull-left imghome" />
                                 </a>
                                 <h3>
                                     <a title="{{$datahdn->tieude}}" href="vanban/hdngoaigiolenlop/{{$datahdn->tieude}}/{{$datahdn->filename}}" >{{$datahdn->tieude}}</a>
@@ -705,7 +705,7 @@
                                 <ul class="related">
                                     @foreach($hdngll as $datahd)
                                     <li class="icon_list">
-                                        <a class="show h4" href="vanban/hdngoaigiolenlop/{{$datahdn->tieude}}/{{$datahdn->filename}}" title="{{$datahd->tieude}}" data-content="" data-img="../public/hdngoaigiolenlop/vanban/{{$datahd->filename}}" data-rel="tooltip" data-placement="top">{{$datahd->tieude}}</a>
+                                        <a class="show h4" href="vanban/hdngoaigiolenlop/{{$datahdn->tieude}}/{{$datahdn->filename}}" title="{{$datahd->tieude}}" data-content="" data-img="hdngoaigiolenlop/vanban/{{$datahd->filename}}" data-rel="tooltip" data-placement="top">{{$datahd->tieude}}</a>
                                     </li>
                                     @endforeach
                                 </ul>
@@ -723,7 +723,7 @@
                 
                 <div class="panel-body">
                     @foreach($video as $vd)
-                    <video width="237" height="239"  src="../public/video/{{$vd->link}}" controls></video>
+                    <video width="237" height="239"  src="video/{{$vd->link}}" controls></video>
                     
                     @endforeach
                 </div>

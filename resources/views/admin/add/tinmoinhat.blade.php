@@ -3,7 +3,7 @@
 
 <div class="container-fluid">
     <div style="text-align: center;padding-top: 3%;padding-bottom: 1%;">
-        <h2 >Tin Mới Nhất</h2>
+        <h2 >Tin mới nhất</h2>
     </div>
     
     <form  action="{{route('PaddTMN')}}" method="POST" enctype="multipart/form-data" >

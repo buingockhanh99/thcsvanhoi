@@ -19,7 +19,7 @@
                 @foreach($tuyensinh as $ts)
                 <div>
                     <h1><i class="fas fa-file-word"></i><span style="color:black;">{{$ts->tieude}}</span> </h1>
-                    <p>Tải văn bản <a href="../../../../public/tinmoinhat/{{$ts->filename}}">tại đây</a></p>
+                    <p>Tải văn bản <a href="tinmoinhat/{{$ts->filename}}">tại đây</a></p>
                 </div>
                 @endforeach
             
@@ -35,7 +35,7 @@
                 @foreach($tinmoinhat as $tmn)
                 <div>
                     <h1><i class="fas fa-file-word"></i><span style="color: black">{{$tmn->tieude}}</span> </h1>
-                    <p>Tải văn bản <a href="../../../../public/tinmoinhat/vanban/{{$tmn->filename}}">tại đây</a></p>
+                    <p>Tải văn bản <a href="tinmoinhat/vanban/{{$tmn->filename}}">tại đây</a></p>
                 </div>
                 @endforeach
                 

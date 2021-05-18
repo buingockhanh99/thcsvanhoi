@@ -22,12 +22,13 @@
                 <div style="width: 100% ;border: slategrey solid 1px; text-align: left; ">
                 <div><h1 style="text-align: center; padding-bottom: 20px; font-size: 32px; ">{{$tieude}}</h1></div>
                 <div style="margin-left: 95%; height: 30px;">
-                    <a href="../../../../public/vanbanmoi/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
+                    <a href="vanbanmoi/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
                         <em class="fa fa-save fa-lg" >&nbsp;</em>
                     </a> 
                 </div>
                 <div style="margin-left: 5%">
-                    <?php include '../public/vanbanmoi/'.$vanban.'.html'?>
+                     @include ( asset('vanbanmoi.A2_vip.docx'))  
+                 
                 </div>
                 </div>
             </div>
@@ -40,12 +41,12 @@
                 <div style="width: 100% ;border: slategrey solid 1px; text-align: left; ">
                 <div><h1 style="text-align: center; padding-bottom: 20px; font-size: 32px; ">{{$tieude}}</h1></div>
                 <div style="margin-left: 95%; height: 30px;">
-                    <a href="../../../../public/vanbantruong/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
+                    <a href="vanbantruong/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
                         <em class="fa fa-save fa-lg" >&nbsp;</em>
                     </a> 
                 </div>
                 <div style="margin-left: 5%">
-                    <?php include '../public/vanbantruong/'.$vanban.'.html'?>
+                    <?php include 'vanbantruong/'.$vanban.'.html'?>
                 </div>
                 </div>
             </div>
@@ -56,12 +57,12 @@
                 <div style="width: 100% ;border: slategrey solid 1px; text-align: left; ">
                 <div><h1 style="text-align: center; padding-bottom: 20px; font-size: 32px; ">{{$tieude}}</h1></div>
                 <div style="margin-left: 95%; height: 30px;">
-                    <a href="../../../../public/vanbancapso/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
+                    <a href="vanbancapso/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
                         <em class="fa fa-save fa-lg" >&nbsp;</em>
                     </a> 
                 </div>
                 <div style="margin-left: 5%">
-                    <?php include '../public/vanbancapso/'.$vanban.'.html'?>
+                    <?php include 'vanbancapso/'.$vanban.'.html'?>
                 </div>
                 </div>
             </div>
@@ -72,12 +73,12 @@
                 <div style="width: 100% ;border: slategrey solid 1px; text-align: left; ">
                 <div><h1 style="text-align: center; padding-bottom: 20px; font-size: 32px; ">{{$tieude}}</h1></div>
                 <div style="margin-left: 95%; height: 30px;">
-                    <a href="../../../../public/tinnhatruong/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
+                    <a href="tinnhatruong/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
                         <em class="fa fa-save fa-lg" >&nbsp;</em>
                     </a> 
                 </div>
                 <div style="margin-left: 5%">
-                    <?php include '../public/tinnhatruong/vanban/'.$vanban.'.html'?>
+                    <?php include 'tinnhatruong/vanban/'.$vanban.'.html'?>
                 </div>
                 </div>
             </div>
@@ -88,12 +89,12 @@
                 <div style="width: 100% ;border: slategrey solid 1px; text-align: left; ">
                 <div><h1 style="text-align: center; padding-bottom: 20px; font-size: 32px; ">{{$tieude}}</h1></div>
                 <div style="margin-left: 95%; height: 30px;">
-                    <a href="../../../../public/congdoan/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
+                    <a href="congdoan/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
                         <em class="fa fa-save fa-lg" >&nbsp;</em>
                     </a> 
                 </div>
                 <div style="margin-left: 5%;">
-                    <?php include '../public/congdoan/vanban/'.$vanban.'.html'?>
+                    <?php include 'congdoan/vanban/'.$vanban.'.html'?>
                 </div>
                 </div>
             </div>
@@ -104,12 +105,12 @@
                 <div style="width: 100% ;border: slategrey solid 1px; text-align: left; ">
                 <div><h1 style="text-align: center; padding-bottom: 20px; font-size: 32px; ">{{$tieude}}</h1></div>
                 <div style="margin-left: 95%; height: 30px;">
-                    <a href="../../../../public/tindoanthe/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
+                    <a href="tindoanthe/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
                         <em class="fa fa-save fa-lg" >&nbsp;</em>
                     </a> 
                 </div>
                 <div style="margin-left: 5%">
-                    <?php include '../public/tindoanthe/vanban/'.$vanban.'.html'?>
+                    <?php include 'tindoanthe/vanban/'.$vanban.'.html'?>
                 </div>
                 </div>
             </div>
@@ -120,12 +121,12 @@
                 <div style="width: 100% ;border: slategrey solid 1px; text-align: left; ">
                 <div><h1 style="text-align: center; padding-bottom: 20px; font-size: 32px; ">{{$tieude}}</h1></div>
                 <div style="margin-left: 95%; height: 30px;">
-                    <a href="../../../../public/hdngoaigiolenlop/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
+                    <a href="hdngoaigiolenlop/vanban/{{$vanban}}"  class="dimgray" title="Lưu bài viết này">
                         <em class="fa fa-save fa-lg" >&nbsp;</em>
                     </a> 
                 </div>
                 <div style="margin-left: 5%">
-                    <?php include '../public/hdngoaigiolenlop/vanban/'.$vanban.'.html'?>
+                    <?php include 'hdngoaigiolenlop/vanban/'.$vanban.'.html'?>
                 </div>
                 </div>
             </div>

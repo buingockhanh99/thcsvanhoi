@@ -41,8 +41,8 @@
                 <tr class="odd gradeX" align="center" style="line-height: 100px">
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
-                    <td><a href="../public/congdoan/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
-                    <td><img src="../public/congdoan/img/{{$dt->imgname}}" alt="" width="100px"></td>
+                    <td><a href="congdoan/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><img src="congdoan/img/{{$dt->imgname}}" alt="" width="100px"></td>
                 </tr>
                 @endforeach
             </table>
@@ -61,8 +61,8 @@
                 <tr class="odd gradeX" align="center" style="line-height: 100px">
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
-                    <td><a href="../public/hdngoaigiolenlop/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
-                    <td><img src="../public/hdngoaigiolenlop/img/{{$dt->imgname}}" alt="" width="100px"></td>
+                    <td><a href="hdngoaigiolenlop/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><img src="hdngoaigiolenlop/img/{{$dt->imgname}}" alt="" width="100px"></td>
                 </tr>
                 @endforeach
             </table>
@@ -81,8 +81,8 @@
                 <tr class="odd gradeX" align="center" style="line-height: 100px">
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
-                    <td><a href="../public/tindoanthe/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
-                    <td><img src="../public/tindoanthe/img/{{$dt->imgname}}" alt="admin/xoa/{{$dt->id}}/key/{{$key='tindoanthe'}}" width="100px"></td>
+                    <td><a href="tindoanthe/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><img src="tindoanthe/img/{{$dt->imgname}}" alt="admin/xoa/{{$dt->id}}/key/{{$key='tindoanthe'}}" width="100px"></td>
                 </tr>
                 @endforeach
             </table>
@@ -100,8 +100,8 @@
                 <tr class="odd gradeX" align="center" style="line-height: 100px">
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
-                    <td><a href="../public/tinmoinhat/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
-                    <td><img src="../public/tinmoinhat/img/{{$dt->imgname}}" alt="" width="100px"></td>
+                    <td><a href="tinmoinhat/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><img src="tinmoinhat/img/{{$dt->imgname}}" alt="" width="100px"></td>
                 </tr>
                 @endforeach
             </table>
@@ -118,7 +118,7 @@
                 <tr class="odd gradeX" align="center" >
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
-                    <td><a href="../public/tinnhanh/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><a href="tinnhanh/{{$dt->filename}}">{{$dt->filename}}</a></td>
                 </tr>
                 @endforeach
             </table>
@@ -136,8 +136,8 @@
                 <tr class="odd gradeX" align="center" style="line-height: 100px">
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
-                    <td><a href="../public/tinnhatruong/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
-                    <td><img src="../public/tinnhatruong/img/{{$dt->imgname}}" alt="" width="100px"></td>
+                    <td><a href="tinnhatruong/vanban/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><img src="tinnhatruong/img/{{$dt->imgname}}" alt="" width="100px"></td>
                 </tr>
                 @endforeach
             </table>
@@ -156,7 +156,7 @@
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
                     <td>{{$dt->ngay}}-{{$dt->thang}}-{{$dt->nam}}</td>
-                    <td><a href="../public/vanbantruong/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><a href="vanbantruong/{{$dt->filename}}">{{$dt->filename}}</a></td>
                 </tr>
                 @endforeach
             </table>
@@ -173,7 +173,7 @@
                 <tr class="odd gradeX" align="center">
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
-                    <td><a href="../public/vanbanmoi/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><a href="vanbanmoi/{{$dt->filename}}">{{$dt->filename}}</a></td>
                 </tr>
                 @endforeach
             </table>
@@ -192,7 +192,7 @@
                     <td>{{$dt->id}}</td>
                     <td>{{$dt->tieude}}</td>
                     <td>{{$dt->ngay}}-{{$dt->thang}}-{{$dt->nam}}</td>
-                    <td><a href="../public/vanbantruong/{{$dt->filename}}">{{$dt->filename}}</a></td>
+                    <td><a href="vanbantruong/{{$dt->filename}}">{{$dt->filename}}</a></td>
                 </tr>
                 @endforeach
             </table>

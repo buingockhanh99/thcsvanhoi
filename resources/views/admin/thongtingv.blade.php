@@ -19,7 +19,7 @@
         </tr>
     @foreach($data as $dt)
          <tr class="odd gradeX" align="center">
-             <td><img src="../public/imggv/{{$dt->anh}}" alt="" height="100px" width="100px"></td>
+             <td><img src="{{asset('imggv/'.$dt->anh)}}" alt="" height="100px" width="100px"></td>
              <td style="padding-top: 5%; ">{{$dt->hoten}}</td>
              <td style="padding-top: 5%; ">{{$dt->diachi}}</td>
              <td style="padding-top: 5%; ">{{$dt->sdt}}</td>

@@ -61,12 +61,18 @@
     @endif  
    
     <div class="body-bg">
-        
-            <header style="margin-top: 45px">
-                <div style="height: 250px;" >
-                    <img style="margin-left: 12.8%" src="{{asset('images/vanhoi445.jpg')}}" width="74.4%" height="250px" />
+        <div class="container">
+            <div class="row">
+                <div class="col-md-24" >
+                    <header style="margin-top: 45px">
+                        <div style="height: 250px;" >
+                            <img src="{{asset('images/vanhoi445.jpg')}}" width="100%" height="248px" />
+                        </div>
+                    </header>
                 </div>
-            </header>
+            </div>
+        </div>
+           
             
             <nav class="second-nav" id="menusite">
                 <div class="container">
@@ -89,17 +95,23 @@
                 </div>
             </nav>
 
-            <div style="background: rgb(241, 241, 241); height: 40px; width: 74.5%; margin-left: 12.7%; margin-bottom: 5px  ">
-                <div style="float: left; height: 40px; width: 9%; line-height: 40px; text-align: center">
-                    <?php $today = date("d/m/Y");
-                    echo $today;  $timestamp = time(); ?>
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-24" >
+         
+                        <div style="float: left; height: 40px; width: 9%; line-height: 40px; text-align: center">
+                            <?php $today = date("d/m/Y");
+                            echo $today;  $timestamp = time(); ?>
+                        </div>
+                        <marquee style="float: right;height: 40px; width: 91%;line-height: 40px" direction="left">
+                            CHÀO MỪNG TỚI TRANG THÔNG TIN ĐIỆN TỬ CỦA TRƯỜNG TH & THCS VÂN HỘI              
+                        </marquee>
+                     
+                    </div>
                 </div>
-                <marquee style="float: right;height: 40px; width: 91%;line-height: 40px" direction="left">
-                    CHÀO MỪNG TỚI TRANG THÔNG TIN ĐIỆN TỬ CỦA TRƯỜNG TH & THCS VÂN HỘI              
-                </marquee>
-               
-               
             </div>
+          
         
             <section class="container">
                 <div  id="body">
@@ -134,7 +146,7 @@
         <div style="text-align: center">
                 <ul class="slimmenuu">
                 
-                    <button class="btn btn-primary" style="margin-right: 11%" ><a style="color: #fff" href="{{route('getlogin')}}">Đăng nhập</a></button> 
+                    <button class="btn btn-primary" style="margin-right: 175px" ><a style="color: #fff" href="{{route('getlogin')}}">Đăng nhập</a></button> 
                     
                     <li>
                         <a  target="_blank" href="http://yenbai.edu.vn/van-ban-cong-van/van-ban-so-gd-dt"><b> XEM CÔNG VĂN</b></a>

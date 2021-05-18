@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use App\Http\chuyendoihtml;
+use App\Http\WordPHP;
 use App\Mail\SendMail;
 use Mail;
 
@@ -164,41 +165,36 @@ class ControllerAdmin extends Controller
 public function PaddAccoutGV(Request $request)
 {
     
-    $this->validate($request,
-    [
-        'username' => 'bail|required|min:3|max:100',
-        'myname' => 'bail|required|min:3|max:20',
-        'email' => 'bail|required|min:3|max:100',
-        'diachi'=> 'bail|required|min:3|max:100',
-        'sdt'=> 'bail|required|min:10|max:10',
-        'date'=> 'bail|required',
-        'file'=> 'bail|required',
-        'sex'=> 'bail|required',
-        'file'=>'required|image',
-    ],
-    [
-        'username.required' =>'Bạn chưa nhập tên',
-        'username.min' => 'username phải có độ dài lớn hơn 3',
-        'username.max' => 'username phải có độ nhỏ hơn 100',
-        'myname.required' =>'Bạn chưa nhập tên đăng nhập',
-        'myname.min' => 'username phải có độ dài lớn hơn 3',
-        'myname.max' => 'username phải có độ nhỏ hơn 20',
-        'email.required' =>'Bạn chưa nhập email',
-        'email.min' => 'email phải có độ dài lớn hơn 3',
-        'email.max' => 'email phải có độ nhỏ hơn 100',
-        'diachi.required' =>'Bạn chưa nhập địa chỉ',
-        'diachi.min' => 'Địa chỉ phải có độ dài lớn hơn 3',
-        'diachi.max' => 'Địa chỉ phải có độ nhỏ hơn 100',
-        'sdt.required' =>'Bạn chưa nhập số điện thoại',
-        'sdt.min' => 'Số điện thoại phải có độ dài là 10',
-        'sdt.max' => 'Số điện thoại phải có độ dài là 10',
-        'date.required' =>'Bạn chưa nhập ngày tháng năm sinh',
-        'file.required' =>'Bạn chưa tải ảnh',
-        'sex.required' =>'Bạn chưa chọn giới tính',
-        'file.required' =>'Chưa chọn ảnh',
-        'file.image' =>'Chọn không đúng định dạng ảnh'
-    ]);
-
+  $this->validate($request,
+  [
+      'username' => 'required|min:3|max:100|unique:users,name',
+      'myname' => 'required|min:3|max:20',
+      'email' => 'required|min:3|max:100|unique:users,email',
+      'diachi'=> 'required|min:3|max:100',
+      'sdt'=> 'required|min:10|max:10|unique:users,id',
+      'date'=> 'required',
+      'sex'=> 'required',
+      'file'=>'required|image|unique:giaovien,anh',
+  ],
+  [
+      'required' => ':attribute không được để trống',
+      'min' => ':attribute không được nhỏ hơn :min',
+      'max' => ':attribute không được lớn hơn :max',
+      'image' => ':attribute không đúng định dạng file',
+      'unique' => ':attribute đã tồn tại',
+  ],
+  [
+      'username' => 'Tên đăng nhập',
+      'myname' => 'Họ và tên',
+      'email' => 'Email',
+      'diachi'=> 'Địa chỉ',
+      'sdt'=> 'Số điện thoại',
+      'date'=> 'Ngày tháng năm sinh',
+      'file'=> 'file ảnh',
+      'sex'=> 'giới tính',
+      
+  ]);
+  try{
     $username = $request ->username;
     $pass = $request->sdt.'@123';
     $myname = $request -> myname;
@@ -210,9 +206,7 @@ public function PaddAccoutGV(Request $request)
     $sex =$request ->sex;
     $namefile = $file->getClientOriginalName();
 
-    
-
-    
+      
     $user = new User();
     $giaovien = new giaovien();
 
@@ -222,63 +216,34 @@ public function PaddAccoutGV(Request $request)
     $user->password = bcrypt($pass);
     $user->level = 2;
 
+    $user->save();
+    $giaovien ->id_gv = $sdt;
+    $giaovien ->hoten = $myname;
+    $giaovien ->diachi = $diachi;
+    $giaovien ->sdt = $sdt;
+    $giaovien ->anh = $namefile;
+    $giaovien ->gioitinh = $sex;
+    $giaovien -> ngaysinh = $date;
+    $file->move('imggv',$namefile);
+
+    $giaovien->save();
+
+    $details = [
+      'title' => 'Tài khoản mật khẩu',
+      'taikhoan' => 'Bùi Ngọc Khánh',
+      'matkhau' => $pass,
+    ];
+
+    Mail::to($email)->send(new SendMail($details));
+
+    return redirect('admin/QuanLyTKGV')->with('thongbao','Tạo tài khoản thành công');
+  }
+  catch(\Exception $exception)
+  {
+    return redirect('admin/tao-tai-khoan-giao-vien')->with('thongbaoloi','Lỗi dữ liệu tải lên');
+  }
     
-    $countsdt =  User::where('id',$sdt)->count();
-    $count = User::where('name',$username)->count();
-    $count1 = User::where('email',$email)->count();
-    $count2 = giaovien::where('anh',$namefile)->count();
-
-    if($countsdt ==0)
-    {
-      if($count == 0)
-      {
-        if($count1 ==0)
-        {
-            if($count2 ==0)
-            {
-              $user->save();
-              $giaovien ->id_gv = $sdt;
-              $giaovien ->hoten = $myname;
-              $giaovien ->diachi = $diachi;
-              $giaovien ->sdt = $sdt;
-              $giaovien ->anh = $namefile;
-              $giaovien ->gioitinh = $sex;
-              $giaovien -> ngaysinh = $date;
-              $file->move('imggv',$namefile);
-
-              $giaovien->save();
-
-              $details = [
-                'title' => 'Tài khoản mật khẩu',
-                'taikhoan' => 'Bùi Ngọc Khánh',
-                'matkhau' => $pass,
-              ];
-            
-              Mail::to($email)->send(new SendMail($details));
-
-              return redirect('admin/QuanLyTKGV')->with('thongbao','Tạo tài khoản thành công');
-            }
-            else
-            {
-              return redirect('admin/tao-tai-khoan-giao-vien')->with('thongbaoloi','Tên ảnh trùng');
-            }
-        }
-        else
-        {
-          return redirect('admin/tao-tai-khoan-giao-vien')->with('thongbaoloi','Email này hiện tại đã có người sử dụng');
-        
-        }
-      
-      }
-      else
-      {
-        return redirect('admin/tao-tai-khoan-giao-vien')->with('thongbaoloi','Tài khoản này đã có người dùng');
-      }
-    }
-    else
-    {
-      return redirect('admin/tao-tai-khoan-giao-vien')->with('thongbaoloi','Số điện thoại trùng');
-    }
+ 
 
     
 }
@@ -433,12 +398,14 @@ public function PaddVBM (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
+      'tieude'=> 'required|max:500|unique:vanbanmoi,tieude',
+      'file' => 'required|mimes:docx|unique:vanbanmoi,filename',
     ],
     [
       'required' => ':attribute Không được để trống',
       'max' => ':attribute Không được lớn hơn :max',
+      'mimes' => ':attribute không đúng định dạng file:docx',
+      'unique' => ':attribute đã tồn tại',
     ],
     [
       'tieude' => 'Tiêu Đề',
@@ -448,56 +415,53 @@ public function PaddVBM (Request $request)
     $tieude = $request ->tieude;
     $file =$request -> file;
     
-
     $filename = $file->getClientOriginalName();
 
+    try
+    {
     $vbm = new vanbanmoi();
-    
-    $counttd = vanbanmoi::where('tieude',$tieude)->count();
-    $counttf = vanbanmoi::where('filename',$filename)->count();
-    
-    if($counttd ==0)
-    {
-      if($counttf ==0)
-      {
-        $vbm->tieude = $tieude;
-        $vbm ->filename = $filename;
-        $chuyendoi = new chuyendoihtml();
-        $link = 'vanbanmoi';
-        $chuyendoi->chuyendoi($link,$file);
-        $file->move('vanbanmoi',$filename);
-      
-        $vbm->save();
-        return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Tải lên thành công');
-      }
-      else
-      {
-        return redirect('admin/tao-van-ban-moi')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
-      
+    $vbm->tieude = $tieude;
+    $vbm ->filename = $filename;
+    $chuyendoi = new chuyendoihtml();
+    $link = 'vanbanmoi';
+    $chuyendoi->chuyendoi($link,$file);
+    $file->move('vanbanmoi',$filename);
+  
+    $vbm->save();
+    return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Tải lên thành công');
     }
-    else
+    catch(\Exception $exception)
     {
-      return redirect('admin/tao-van-ban-moi')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+      return redirect('admin/tao-van-ban-moi')->with('thongbaoloi','Lỗi dữ liệu tải lên');
     }
+    
+        
+      
+   
+  
 }
 public function PaddTMN (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
-        'img' => 'required'
+        'tieude'=> 'required|max:500|unique:tinmoinhat,tieude',
+        'file' => 'required|mimes:docx|unique:tinmoinhat,filename',
+        'img' => 'required|image|unique:tinmoinhat,imgname'
     ],
     [
-      'required' => ':attribute Không được để trống',
-      'max' => ':attribute Không được lớn hơn :max',
+      'required' => ':attribute không được để trống',
+      'max' => ':attribute không được lớn hơn :max',
+      'mimes' => ':attribute không đúng định dạng docx',
+      'image' => ':attribute không đúng định dạng ảnh',
+      'unique' => ':attribute đã tồn tại tên này',
     ],
     [
       'tieude' => 'Tiêu Đề',
-      'file' => 'Dữ liệu FILE',
+      'file' => 'Dữ liệu tải lên',
+      'img' => 'Ảnh tải lên',
     ]);
-
+  try
+  {
     $tieude = $request ->tieude;
     $file =$request -> file;
     $img = $request -> img;
@@ -506,63 +470,51 @@ public function PaddTMN (Request $request)
     $imgname = $img->getClientOriginalName();
 
     $tmn = new tinmoinhat();
-    
-    
-    $counttd = tinmoinhat::where('tieude',$tieude)->count();
-    $counttf = tinmoinhat::where('filename',$filename)->count();
-    $countimg = tinmoinhat::where('imgname',$imgname)->count();
-    
-    if($counttd ==0)
-    {
-      if($counttf ==0)
-      {
-        if($countimg ==0)
-        {
-        $tmn->tieude = $tieude;
-        $tmn ->filename = $filename;
-        $tmn ->imgname = $imgname;
-        $chuyendoi = new chuyendoihtml();
-        $link = 'tinmoinhat/vanban';
-        $chuyendoi->chuyendoi($link,$file);
-        $file->move('tinmoinhat/vanban',$filename);
-        $img->move('tinmoinhat/img',$imgname);
-        
 
-        $tmn->save();
-        return redirect('admin/quan-ly-tin-moi-nhat')->with('thongbao','Tải lên thành công');
-        }
-        else
-        {
-          return redirect('admin/tao-tin-moi-nhat')->with('thongbaoloi','Tên ảnh này đã tồn tại');
-        }
-      }
-      else
-      {
-        return redirect('admin/tao-tin-moi-nhat')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
+    
+    $tmn->tieude = $tieude;
+    $tmn ->filename = $filename;
+    $tmn ->imgname = $imgname;
+    $chuyendoi = new chuyendoihtml();
+    $link = 'tinmoinhat/vanban';
+    $chuyendoi->chuyendoi($link,$file);
+    $file->move('tinmoinhat/vanban',$filename);
+    $img->move('tinmoinhat/img',$imgname);
+    
+
+    $tmn->save();
+    return redirect('admin/quan-ly-tin-moi-nhat')->with('thongbao','Tải lên thành công');
+  }
+  catch(\Exception $exception)
+  {
+    return redirect('admin/tao-tin-moi-nhat')->with('thongbaoloi','Lỗi dữ liệu tải lên');
+  }
+        
+         
       
-    }
-    else
-    {
-      return redirect('admin/tao-tin-moi-nhat')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-    }
+    
 }
 public function PaddVBT (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
+      
+      'tieude'=> 'required|max:500|unique:vanbantruong,tieude',
+      'file' => 'required|mimes:docx|unique:vanbantruong,filename',
     ],
     [
-      'required' => ':attribute Không được để trống',
-      'max' => ':attribute Không được lớn hơn :max',
+      'required' => ':attribute không được để trống',
+      'max' => ':attribute không được lớn hơn :max',
+      'mimes' => ':attribute không đúng định dạng docx',
+      'unique' => ':attribute đã tồn tại tên này',
     ],
     [
       'tieude' => 'Tiêu Đề',
       'file' => 'Dữ liệu FILE',
       
     ]);
+  try
+  {
     $now = getdate();
     $ngay = $now["mday"];
     $thang = $now["mon"];
@@ -574,432 +526,322 @@ public function PaddVBT (Request $request)
 
     $vbt = new vanbantruong();
     
-    
-    $counttd = vanbantruong::where('tieude',$tieude)->count();
-    $counttf = vanbantruong::where('filename',$filename)->count();
-    
-    if($counttd ==0)
-    {
-      if($counttf ==0)
-      {
-        $vbt ->ngay = $ngay;
-        $vbt ->thang = $thang;
-        $vbt ->nam = $nam;
-        $vbt->tieude = $tieude;
-        $vbt ->filename = $filename;
-        $link = 'vanbantruong';
-        $chuyendoi = new chuyendoihtml();
-        $chuyendoi->chuyendoi($link,$file);
-        $file->move('vanbantruong',$filename);
+    $vbt ->ngay = $ngay;
+    $vbt ->thang = $thang;
+    $vbt ->nam = $nam;
+    $vbt->tieude = $tieude;
+    $vbt ->filename = $filename;
+    $link = 'vanbantruong';
+    $chuyendoi = new chuyendoihtml();
+    $chuyendoi->chuyendoi($link,$file);
+    $file->move('vanbantruong',$filename);
 
-        $vbt->save();
-        return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Tải lên thành công');
-      }
-      else
-      {
-        return redirect('admin/tao-van-ban-truong')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
+    $vbt->save();
+    return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Tải lên thành công');
+  }
+  catch(\Exception $exception)
+  {
+    return redirect('admin/tao-van-ban-truong')->with('thongbaoloi','Lỗi dữ liệu tải lên');
+  }
       
-    }
-    else
-    {
-      return redirect('admin/tao-van-ban-truong')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-    }
 }
 public function PaddVBCS (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
+        'tieude'=> 'required|max:500|unique:vanbancapso,tieude',
+        'file' => 'required|mimes:docx|unique:vanbancapso,filename',
     ],
     [
       'required' => ':attribute Không được để trống',
       'max' => ':attribute Không được lớn hơn :max',
+      'mimes' => ':attribute không đúng định dạng docx',
+      'unique' => ':attribute đã tồn tại tên này',
+      
     ],
     [
       'tieude' => 'Tiêu Đề',
       'file' => 'Dữ liệu FILE',
     ]);
-    
-    $now = getdate();
-    $ngay = $now["mday"];
-    $thang = $now["mon"];
-    $nam = $now["year"];
-    $tieude = $request ->tieude;
-    $file =$request -> file;
-    
-    $filename = $file->getClientOriginalName();
-
-    $vbcs = new vanbancapso();
-    
-    
-    $counttd = vanbancapso::where('tieude',$tieude)->count();
-    $counttf = vanbancapso::where('filename',$filename)->count();
-    
-    if($counttd ==0)
+    try
     {
-      if($counttf ==0)
-      {
-        $vbcs ->ngay = $ngay;
-        $vbcs ->thang = $thang;
-        $vbcs ->nam = $nam;
-        $vbcs->tieude = $tieude;
-        $vbcs ->filename = $filename;
-        $chuyendoi = new chuyendoihtml();
-        $link = 'vanbancapso';
-        $chuyendoi->chuyendoi($link,$file);
-        $file->move('vanbancapso',$filename);
-
-        $vbcs->save();
-        return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Tải lên thành công');
-      }
-      else
-      {
-        return redirect('admin/tao-van-ban-cap-so')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
+      $now = getdate();
+      $ngay = $now["mday"];
+      $thang = $now["mon"];
+      $nam = $now["year"];
+      $tieude = $request ->tieude;
+      $file =$request -> file;
       
+      $filename = $file->getClientOriginalName();
+
+      $vbcs = new vanbancapso();
+
+      $vbcs ->ngay = $ngay;
+      $vbcs ->thang = $thang;
+      $vbcs ->nam = $nam;
+      $vbcs->tieude = $tieude;
+      $vbcs ->filename = $filename;
+      $chuyendoi = new chuyendoihtml();
+      $link = 'vanbancapso';
+      $chuyendoi->chuyendoi($link,$file);
+      $file->move('vanbancapso',$filename);
+
+      $vbcs->save();
+      return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Tải lên thành công');
     }
-    else
+    catch(\Exception $exception)
     {
-      return redirect('admin/tao-van-ban-cap-so')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+      return redirect('admin/tao-van-ban-cap-so')->with('thongbaoloi','Lỗi dữ liệu tải lên');
     }
+     
 }
 public function PaddTNT (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
-        'img' =>'required'
+      'tieude'=> 'required|max:500unique:tinnhatruong,tieude',
+      'file' => 'required|mimes:docx|unique:tinnhatruong,filename',
+      'img' =>'required|unique:tinnhatruong,imgname|image'
     ],
     [
       'required' => ':attribute Không được để trống',
       'max' => ':attribute Không được lớn hơn :max',
-      
+      'mimes' => ':attribute không đúng định dạng docx',
+      'unique' => ':attribute đã tồn tại tên này',
+      'image' => ':attribute không đúng đính dạng ảnh', 
     ],
     [
       'tieude' => 'Tiêu Đề',
-      'file' => 'Dữ liệu FILE',
-
-      
+      'file' => 'Dữ liệu tải lên',
     ]);
     
-    $tieude = $request ->tieude;
-    $file =$request -> file;
-    $img = $request ->img;
-    
-    $filename = $file->getClientOriginalName();
-    $imgname = $img->getClientOriginalName();
-
-    $tnt = new tinnhatruong();
-    
-    
-    $counttd = tinnhatruong::where('tieude',$tieude)->count();
-    $counttf = tinnhatruong::where('filename',$filename)->count();
-    $countimg = tinnhatruong::where('imgname',$imgname)->count();
-    
-    if($counttd ==0)
+    try
     {
-      if($counttf ==0)
-      {
-        if($countimg ==0)
-        {
+      $tieude = $request ->tieude;
+      $file =$request -> file;
+      $img = $request ->img;
       
-        $tnt->tieude = $tieude;
-        $tnt ->filename = $filename;
-        $tnt ->imgname = $imgname;
-        $chuyendoi = new chuyendoihtml();
-        $link = 'tinnhatruong/vanban';
-        $chuyendoi->chuyendoi($link,$file);
-        $file->move('tinnhatruong/vanban',$filename);
-        $img->move('tinnhatruong/img',$imgname);
+      $filename = $file->getClientOriginalName();
+      $imgname = $img->getClientOriginalName();
 
-        $tnt->save();
-        return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Tải lên thành công');
-        }
-        else
-        {
-          return redirect('admin/tao-tin-nha-truong')->with('thongbaoloi','Tên ảnh trùng');
-        }
-      }
-      else
-      {
-        return redirect('admin/tao-tin-nha-truong')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
+      $tnt = new tinnhatruong();
       
+      
+      $tnt->tieude = $tieude;
+      $tnt ->filename = $filename;
+      $tnt ->imgname = $imgname;
+      $chuyendoi = new chuyendoihtml();
+      $link = 'tinnhatruong/vanban';
+      $chuyendoi->chuyendoi($link,$file);
+      $file->move('tinnhatruong/vanban',$filename);
+      $img->move('tinnhatruong/img',$imgname);
+
+      $tnt->save();
+      return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Tải lên thành công');
     }
-    else
+    catch(\Exception $exception)
     {
-      return redirect('admin/tao-tin-nha-truong')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+      return redirect('admin/tao-tin-nha-truong')->with('thongbaoloi','Lỗi dữ liệu tải lên');
     }
+        
 }
 public function Paddcongdoan (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
-        'img' =>'required'
+      'tieude'=> 'required|max:500|unique:congdoan,tieude',
+      'file' => 'required|mimes:docx|unique:congdoan,filename',
+      'img' =>'required|unique:congdoan,imgname|image'
     ],
     [
       'required' => ':attribute Không được để trống',
       'max' => ':attribute Không được lớn hơn :max',
-    
+      'mimes' => ':attribute không đúng định dạng docx',
+      'unique' => ':attribute đã tồn tại tên này',
+      'image' => ':attribute không đúng định dạng ảnh',
     ],
     [
       'tieude' => 'Tiêu Đề',
-      'file' => 'Dữ liệu FILE',
-      'img' =>'Ảnh',
-      
+      'file' => 'Dữ liệu tải liên',
+      'img' =>'Ảnh tải lên',     
     ]);
-    
-    $tieude = $request ->tieude;
-    $file =$request -> file;
-    $img = $request ->img;
-    
-    $filename = $file->getClientOriginalName();
-    $imgname = $img->getClientOriginalName();
-
-    $cd = new congdoan();
-    
-    
-    $counttd = congdoan::where('tieude',$tieude)->count();
-    $counttf = congdoan::where('filename',$filename)->count();
-    $countimg = congdoan::where('imgname',$imgname)->count();
-    
-    if($counttd ==0)
+    try
     {
-      if($counttf ==0)
-      {
-        if($countimg ==0)
-        {
+      $tieude = $request ->tieude;
+      $file =$request -> file;
+      $img = $request ->img;
       
-        $cd->tieude = $tieude;
-        $cd ->filename = $filename;
-        $cd ->imgname = $imgname;
+      $filename = $file->getClientOriginalName();
+      $imgname = $img->getClientOriginalName();
 
-        $chuyendoi = new chuyendoihtml();
-        $link = 'congdoan/vanban';
-        $chuyendoi->chuyendoi($link,$file);
-
-        $file->move('congdoan/vanban',$filename);
-        $img->move('congdoan/img',$imgname);
-
-        $cd->save();
-        return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Tải lên thành công');
-        }
-        else
-        {
-          return redirect('admin/tao-tin-cong-doan')->with('thongbaoloi','Tên ảnh trùng');
-        }
-      }
-      else
-      {
-        return redirect('admin/tao-tin-cong-doan')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
+      $cd = new congdoan();
       
+        
+      $cd->tieude = $tieude;
+      $cd ->filename = $filename;
+      $cd ->imgname = $imgname;
+
+      $chuyendoi = new chuyendoihtml();
+      $link = 'congdoan/vanban';
+      $chuyendoi->chuyendoi($link,$file);
+
+      $file->move('congdoan/vanban',$filename);
+      $img->move('congdoan/img',$imgname);
+
+      $cd->save();
+      return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Tải lên thành công');
     }
-    else
+    catch(\Exception $exception)
     {
-      return redirect('admin/tao-tin-cong-doan')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+      return redirect('admin/tao-tin-cong-doan')->with('thongbaoloi','Lỗi dữ liệu tải lên');
     }
 }
 public function Paddtindoanthe (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
-        'img' =>'required'
+        'tieude'=> 'required|max:500|unique:tindoanthe,tieude',
+        'file' => 'required|mimes:docx|unique:tindoanthe,filename',
+        'img' =>'required|unique:tindoanthe,imgname|image',
     ],
     [
       'required' => ':attribute Không được để trống',
       'max' => ':attribute Không được lớn hơn :max',
+      'mimes' => ':attribute không đúng định dạng docx',
+      'unique' => ':attribute đã tồn tại tên này',
+      'image' => ':attribute không đúng định dạng ảnh',
       
     ],
     [
       'tieude' => 'Tiêu Đề',
-      'file' => 'Dữ liệu FILE',
-      'img' =>'Ảnh',
+      'file' => 'Dữ liệu tải lên',
+      'img' =>'Ảnh tải lên',
       
     ]);
-    
-    $tieude = $request ->tieude;
-    $file =$request -> file;
-    $img = $request ->img;
-    
-    $filename = $file->getClientOriginalName();
-    $imgname = $img->getClientOriginalName();
-
-    $tindt = new tindoanthe();
-    
-    
-    $counttd = tindoanthe::where('tieude',$tieude)->count();
-    $counttf = tindoanthe::where('filename',$filename)->count();
-    $countimg = tindoanthe::where('imgname',$imgname)->count();
-    
-    if($counttd ==0)
+    try
     {
-      if($counttf ==0)
-      {
-        if($countimg ==0)
-        {
+      $tieude = $request ->tieude;
+      $file =$request -> file;
+      $img = $request ->img;
       
-        $tindt->tieude = $tieude;
-        $tindt ->filename = $filename;
-        $tindt ->imgname = $imgname;
+      $tindt = new tindoanthe();
 
-        $chuyendoi = new chuyendoihtml();
-        $link = 'tindoanthe/vanban';
-        $chuyendoi->chuyendoi($link,$file);
+      $tindt->tieude = $tieude;
+      $tindt ->filename = $filename;
+      $tindt ->imgname = $imgname;
 
-        $file->move('tindoanthe/vanban',$filename);
-        $img->move('tindoanthe/img',$imgname);
+      $chuyendoi = new chuyendoihtml();
+      $link = 'tindoanthe/vanban';
+      $chuyendoi->chuyendoi($link,$file);
 
-        $tindt->save();
-        return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Tải lên thành công');
-        }
-        else
-        {
-          return redirect('admin/tao-tin-doan-the')->with('thongbaoloi','Tên ảnh trùng');
-        }
-      }
-      else
-      {
-        return redirect('admin/tao-tin-doan-the')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
-      
+      $file->move('tindoanthe/vanban',$filename);
+      $img->move('tindoanthe/img',$imgname);
+
+      $tindt->save();
+      return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Tải lên thành công');
     }
-    else
+    catch(\Exception $exception)
     {
-      return redirect('admin/tao-tin-doan-the')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+      return redirect('admin/tao-tin-doan-the')->with('thongbaoloi','Lỗi dữ liệu tải lên');
     }
+        
 }
 public function Paddhdngoaigiolenlop (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
-        'img' =>'required'
+        'tieude'=> 'required|max:500|unique:hdngoaigiolenlop,tieude',
+        'file' => 'required |mimes:docx|unique:hdngoaigiolenlop,filename',
+        'img' =>'required|unique:hdngoaigiolenlop,filename|image'
     ],
     [
       'required' => ':attribute Không được để trống',
       'max' => ':attribute Không được lớn hơn :max',
+      'mimes' => ':attribute không đúng định dạng docx',
+      'unique' => ':attribute đã tồn tại tên này',
+      'image' => ':attribute không đúng định dạng ảnh',
     ],
     [
       'tieude' => 'Tiêu Đề',
-      'file' => 'Dữ liệu FILE',
-      'img' =>'Ảnh',
+      'file' => 'Dữ liệu tải lên',
+      'img' =>'Ảnh tải lên',
       
     ]);
-    
-    $tieude = $request ->tieude;
-    $file =$request -> file;
-    $img = $request ->img;
-    
-    $filename = $file->getClientOriginalName();
-    $imgname = $img->getClientOriginalName();
-
-    $hdngll = new hdngoaigiolenlop();
-    
-    
-    $counttd = hdngoaigiolenlop::where('tieude',$tieude)->count();
-    $counttf = hdngoaigiolenlop::where('filename',$filename)->count();
-    $countimg = hdngoaigiolenlop::where('imgname',$imgname)->count();
-    
-    if($counttd ==0)
+    try
     {
-      if($counttf ==0)
-      {
-        if($countimg ==0)
-        {
+      $tieude = $request ->tieude;
+      $file =$request -> file;
+      $img = $request ->img;
+
+      $hdngll = new hdngoaigiolenlop();
       
-        $hdngll->tieude = $tieude;
-        $hdngll ->filename = $filename;
-        $hdngll ->imgname = $imgname;
+      
+      $hdngll->tieude = $tieude;
+      $hdngll ->filename = $filename;
+      $hdngll ->imgname = $imgname;
+      
+      $chuyendoi = new chuyendoihtml();
+      $link = 'hdngoaigiolenlop/vanban';
+      $chuyendoi->chuyendoi($link,$file);
+
+      $file->move('hdngoaigiolenlop/vanban',$filename);
+      $img->move('hdngoaigiolenlop/img',$imgname);
+
+      $hdngll->save();
+      return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Tải lên thành công');
+    }
+    catch(\Exception $exception)
+    {
+      return redirect('admin/tao-tin-hdngoaigiolenlop')->with('thongbaoloi','Lỗi dữ liệu tải lên');
+    }
         
-        $chuyendoi = new chuyendoihtml();
-        $link = 'hdngoaigiolenlop/vanban';
-        $chuyendoi->chuyendoi($link,$file);
-
-        $file->move('hdngoaigiolenlop/vanban',$filename);
-        $img->move('hdngoaigiolenlop/img',$imgname);
-
-        $hdngll->save();
-        return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Tải lên thành công');
-        }
-        else
-        {
-          return redirect('admin/tao-tin-hdngoaigiolenlop')->with('thongbaoloi','Tên ảnh trùng');
-        }
-      }
-      else
-      {
-        return redirect('admin/tao-tin-hdngoaigiolenlop')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
-      
-    }
-    else
-    {
-      return redirect('admin/tao-tin-hdngoaigiolenlop')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-    }
 }
 public function PaddTN (Request $request)
 {
   $this->validate($request,
     [
-        'tieude'=> 'required|max:500',
-        'file' => 'required',
+        'tieude'=> 'required|max:500|unique:tinnhanh,tieude',
+        'file' => 'required |mimes:docx|unique:tinhanh,filename',
         
     ],
     [
       'required' => ':attribute Không được để trống',
       'max' => ':attribute Không được lớn hơn :max',
+      'mimes' => ':attribute không đúng định dạng docx',
+      'unique' => ':attribute đã tồn tại tên này',
+      
       
     ],
     [
       'tieude' => 'Tiêu Đề',
-      'file' => 'Dữ liệu FILE'   
+      'file' => 'Dữ liệu tải lên'   
     ]);
 
-    $tieude = $request ->tieude;
-    $file =$request -> file;
-    
-    $filename = $file->getClientOriginalName();
-
-    $tn = new tinnhanh();
-    
-    
-    $counttd = tinnhanh::where('tieude',$tieude)->count();
-    $counttf = tinnhanh::where('filename',$filename)->count();
-    
-    if($counttd ==0)
+    try
     {
-      if($counttf ==0)
-      {
-        $tn->tieude = $tieude;
-        $tn ->filename = $filename;
-
-        $chuyendoi = new chuyendoihtml();
-        $link = 'tinnhanh';
-        $chuyendoi->chuyendoi($link,$file);
-
-        $file->move('tinnhanh',$filename);
-        $tn->save();
-        return redirect('admin/quan-ly-tin-tuyen-sinh')->with('thongbao','Tải lên thành công');
-      }
-      else
-      {
-        return redirect('admin/tao-tin-tuyen-sinh')->with('thongbaoloi','Tên file này đã tồn tại');
-      }       
+      $tieude = $request ->tieude;
+      $file =$request -> file;
       
+      $filename = $file->getClientOriginalName();
+
+      $tn = new tinnhanh();
+      
+      $tn->tieude = $tieude;
+      $tn ->filename = $filename;
+
+      $chuyendoi = new chuyendoihtml();
+      $link = 'tinnhanh';
+      $chuyendoi->chuyendoi($link,$file);
+
+      $file->move('tinnhanh',$filename);
+      $tn->save();
+      return redirect('admin/quan-ly-tin-tuyen-sinh')->with('thongbao','Tải lên thành công');
     }
-    else
+    catch(\Exception $exception)
     {
-      return redirect('admin/tao-tin-tuyen-sinh')->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+      return redirect('admin/tao-tin-tuyen-sinh')->with('thongbaoloi','Lỗi dữ liệu tải lên');
     }
+      
 }
 
 
@@ -1183,13 +1025,13 @@ public function PaddTN (Request $request)
                   unlink($path.$file);
                   unlink($path.$file.'.html');
                   $delete ->delete();
-                  return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Xóa thành công');
+                  return redirect('admin/quan-ly-tin-tuyen-sinh')->with('thongbao','Xóa thành công');
                 }
                 else
                 {
                   
                   $delete ->delete();
-                  return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Xóa thành công');
+                  return redirect('admin/quan-ly-tin-tuyen-sinh')->with('thongbao','Xóa thành công');
                 }
           break;
           case "tinnhatruong";
@@ -1411,43 +1253,43 @@ public function PaddTN (Request $request)
           $update = congdoan::find($id);
           $this->validate($request,
           [
-              'tieude'=> 'required|max:500',
+            'tieude'=> 'required|max:500|unique:congdoan,tieude',
           ],
           [
-            'required' => ':attribute Không được để trống',
-            'max' => ':attribute Không được lớn hơn :max',   
+            'required' => ':attribute không được để trống',
+            'max' => ':attribute không được lớn hơn :max',   
+            'unique' => ':attribute đã tồn tại',
           ],
           [
             'tieude' => 'Tiêu Đề',
           ]);
-          $tieude = $request ->tieude;
-          $file =$request -> file;
-          $img = $request ->img;
-          $confimtieude = $update ->tieude;
-          $counttd = congdoan::where('tieude',$tieude)->count();
-          
-          if(isset($file)&isset($img))
+          try
           {
-            $filename = $file->getClientOriginalName();
-            $imgname = $img->getClientOriginalName();
-
-            $counttf = congdoan::where('filename',$filename)->count();
-            $countimg = congdoan::where('imgname',$imgname)->count();
-            if($counttf ==0)
+            $tieude = $request ->tieude;
+            $file =$request -> file;
+            $img = $request ->img;
+            $confimtieude = $update ->tieude;
+            
+            if(isset($file)&isset($img))
             {
-              if($countimg ==0)
+              $filename = $file->getClientOriginalName();
+              $imgname = $img->getClientOriginalName();
+
+              $counttf = congdoan::where('filename',$filename)->count();
+              $countimg = congdoan::where('imgname',$imgname)->count();
+              if($counttf ==0)
               {
-                
-                $linkimg ='/congdoan/img/'.$update->imgname;
-                $linkfile ='/congdoan/vanban/'.$update->filename;
-                $path = str_replace('\\','/',public_path());
-                unlink($path.$linkimg);
-                unlink($path.$linkfile);
-                unlink($path.$linkfile.'.html');
-                if($tieude != $confimtieude)
+                if($countimg ==0)
                 {
-                  if($counttd ==0)
-                  {
+                  
+                  $linkimg ='/congdoan/img/'.$update->imgname;
+                  $linkfile ='/congdoan/vanban/'.$update->filename;
+                  $path = str_replace('\\','/',public_path());
+                  unlink($path.$linkimg);
+                  unlink($path.$linkfile);
+                  unlink($path.$linkfile.'.html');
+                  if($tieude != $confimtieude)
+                  {     
                     $update->tieude = $tieude;
                     $update ->filename = $filename;
                     $update ->imgname = $imgname;
@@ -1461,405 +1303,22 @@ public function PaddTN (Request $request)
 
                     $update->save();
                     return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
-                  }
-                  else
-                  {
-                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                  }
-                }
-                else
-                {
-                  $update ->filename = $filename;
-                  $update ->imgname = $imgname;
-
-                  $chuyendoi = new chuyendoihtml();
-                  $link = 'congdoan/vanban';
-                  $chuyendoi->chuyendoi($link,$file);
-
-                  $file->move('congdoan/vanban',$filename);
-                  $img->move('congdoan/img',$imgname);
-
-                  $update->save();
-                  return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
-                }
-              
-                
-              }
-              else
-              {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-              }  
-            }
-            else
-            {
-              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên ảnh trùng');
-            }
-
-          }
-          else if(isset($file))
-          {
-            $filename = $file->getClientOriginalName();
-            $counttf = congdoan::where('filename',$filename)->count();
-            if($counttf ==0)
-            {
-              $linkfile ='/congdoan/vanban/'.$update->filename;
-              $path = str_replace('\\','/',public_path());
-
-              unlink($path.$linkfile);
-              unlink($path.$linkfile.'.html');
-
-              if($tieude != $confimtieude)
-              {
-                if($counttd ==0)
-                {
-                  $update->tieude = $tieude;
-                  $update ->filename = $filename;
                   
-                  $chuyendoi = new chuyendoihtml();
-                  $link = 'congdoan/vanban';
-                  $chuyendoi->chuyendoi($link,$file);
-
-                  $file->move('congdoan/vanban',$filename);
-                  $update->save();
-                  return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
-                }
-                else
-                {
-                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                }
-              }
-              else
-              {
-                $update ->filename = $filename;
-                
-                $chuyendoi = new chuyendoihtml();
-                $link = 'congdoan/vanban';
-                $chuyendoi->chuyendoi($link,$file);
-
-                $file->move('congdoan/vanban',$filename);
-                $update->save();
-                return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
-              }
-              
-            }
-            else
-            {
-              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-            }  
-          }
-          else if(isset($img))
-          {
-            $imgname = $img->getClientOriginalName();
-            $countimg = congdoan::where('imgname',$imgname)->count();
-            if($countimg ==0)
-            {
-              $linkimg ='/congdoan/img/'.$update->imgname;
-              $path = str_replace('\\','/',public_path());
-              unlink($path.$linkimg);
-              if($tieude != $confimtieude)
-              {
-                if($counttd ==0)
-                {
-                  $update->tieude = $tieude;
-                  $update ->imgname = $imgname;
-    
-                  $img->move('congdoan/img',$imgname);
-                  $update->save();
-                  return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
-                }
-                else
-                {
-                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                }
-
-              }
-              else
-              {
-                $update ->imgname = $imgname;
-  
-                $img->move('congdoan/img',$imgname);
-                $update->save();
-                return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
-              }            
-            }
-            else
-            {
-              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Ảnh này đã tồn tại');
-            }  
-          }
-          else
-          {
-            $update->tieude = $tieude;
-            $update->save();
-            return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
-          }
-
-      break;
-
-      case "hdngoaigio";
-        $update = hdngoaigiolenlop::find($id);
-        $this->validate($request,
-          [
-              'tieude'=> 'required|max:500',
-          ],
-          [
-            'required' => ':attribute Không được để trống',
-            'max' => ':attribute Không được lớn hơn :max',   
-          ],
-          [
-            'tieude' => 'Tiêu Đề',
-          ]);
-          $tieude = $request ->tieude;
-          $file =$request -> file;
-          $img = $request ->img;
-          $confimtieude = $update ->tieude;
-          $counttd = hdngoaigiolenlop::where('tieude',$tieude)->count();
-          
-          if(isset($file)&isset($img))
-          {
-            $filename = $file->getClientOriginalName();
-            $imgname = $img->getClientOriginalName();
-
-            $counttf = hdngoaigiolenlop::where('filename',$filename)->count();
-            $countimg = hdngoaigiolenlop::where('imgname',$imgname)->count();
-            if($counttf ==0)
-            {
-              if($countimg ==0)
-              {
-                
-                $linkimg ='/hdngoaigiolenlop/img/'.$update->imgname;
-                $linkfile ='/hdngoaigiolenlop/vanban/'.$update->filename;
-                $path = str_replace('\\','/',public_path());
-                unlink($path.$linkimg);
-                unlink($path.$linkfile);
-                unlink($path.$linkfile.'.html');
-                if($tieude != $confimtieude)
-                {
-                  if($counttd ==0)
-                  {
-                    $update->tieude = $tieude;
-                    $update ->filename = $filename;
-                    $update ->imgname = $imgname;
-                    
-                    $chuyendoi = new chuyendoihtml();
-                    $link = 'hdngoaigiolenlop/vanban';
-                    $chuyendoi->chuyendoi($link,$file);
-
-                    
-                    $file->move('hdngoaigiolenlop/vanban',$filename);
-                    $img->move('hdngoaigiolenlop/img',$imgname);
-
-                    $update->save();
-                    return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
-                  }
-                  else
-                  {
-                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                  }
-                }
-                else
-                {
-                  $update ->filename = $filename;
-                  $update ->imgname = $imgname;
-
-                  $chuyendoi = new chuyendoihtml();
-                  $link = 'hdngoaigiolenlop/vanban';
-                  $chuyendoi->chuyendoi($link,$file);
-
-                  $file->move('hdngoaigiolenlop/vanban',$filename);
-                  $img->move('hdngoaigiolenlop/img',$imgname);
-
-                  $update->save();
-                  return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
-                }
-              
-                
-              }
-              else
-              {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên ảnh đã tồn tại');
-              }  
-            }
-            else
-            {
-              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đã tồn tại');
-            }
-
-          }
-          else if(isset($file))
-          {
-            $filename = $file->getClientOriginalName();
-            $counttf = hdngoaigiolenlop::where('filename',$filename)->count();
-            if($counttf ==0)
-            {
-              
-              $linkfile ='/hdngoaigiolenlop/vanban/'.$update->filename;
-              $path = str_replace('\\','/',public_path());
-              unlink($path.$linkfile);
-              unlink($path.$linkfile.'.html');
-              if($tieude != $confimtieude)
-              {
-                if($counttd ==0)
-                {
-                  $update->tieude = $tieude;
-                  $update ->filename = $filename;
-    
-                  $chuyendoi = new chuyendoihtml();
-                  $link = 'hdngoaigiolenlop/vanban';
-                  $chuyendoi->chuyendoi($link,$file);
-
-                  $file->move('hdngoaigiolenlop/vanban',$filename);
-                  $update->save();
-                  return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
-                }
-                else
-                {
-                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                }
-              }
-              else
-              {
-                $update ->filename = $filename;
-  
-                $chuyendoi = new chuyendoihtml();
-                $link = 'hdngoaigiolenlop/vanban';
-                $chuyendoi->chuyendoi($link,$file);
-
-                $file->move('hdngoaigiolenlop/vanban',$filename);
-                $update->save();
-                return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
-              }
-              
-            }
-            else
-            {
-              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-            }  
-          }
-          else if(isset($img))
-          {
-            $imgname = $img->getClientOriginalName();
-            $countimg = hdngoaigiolenlop::where('imgname',$imgname)->count();
-            if($countimg ==0)
-            {
-             
-              $linkimg ='/hdngoaigiolenlop/img/'.$update->imgname;
-              $path = str_replace('\\','/',public_path());
-              unlink($path.$linkimg);
-              if($tieude != $confimtieude)
-              {
-                if($counttd ==0)
-                {
-                  $update->tieude = $tieude;
-                  $update ->imgname = $imgname;
-    
-                  $img->move('hdngoaigiolenlop/img',$imgname);
-                  $update->save();
-                  return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
-                }
-                else
-                {
-                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                }
-
-              }
-              else
-              {
-                $update ->imgname = $imgname;
-  
-                $img->move('hdngoaigiolenlop/img',$imgname);
-                $update->save();
-                return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
-              }            
-            }
-            else
-            {
-              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Ảnh này đã tồn tại');
-            }  
-          }
-          else
-          {
-            $update->tieude = $tieude;
-            $update->save();
-            return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
-          }
-      break;
-
-      case "tindoanthe";
-      
-          $update = tindoanthe::find($id);
-          $this->validate($request,
-            [
-              'tieude'=> 'required|max:500',
-            ],
-            [
-              'required' => ':attribute Không được để trống',
-              'max' => ':attribute Không được lớn hơn :max',   
-            ],
-            [
-              'tieude' => 'Tiêu Đề',
-            ]);
-            $tieude = $request ->tieude;
-            $file =$request -> file;
-            $img = $request ->img;
-            $confimtieude = $update ->tieude;
-            $counttd = tindoanthe::where('tieude',$tieude)->count();
-            
-            if(isset($file)&isset($img))
-            {
-              $filename = $file->getClientOriginalName();
-              $imgname = $img->getClientOriginalName();
-
-              $counttf = tindoanthe::where('filename',$filename)->count();
-              $countimg = tindoanthe::where('imgname',$imgname)->count();
-              if($counttf ==0)
-              {
-                if($countimg ==0)
-                {
-                  
-                  $linkimg ='/tindoanthe/img/'.$update->imgname;
-                  $linkfile ='/tindoanthe/vanban/'.$update->filename;
-                  $path = str_replace('\\','/',public_path());
-                  unlink($path.$linkimg);
-                  unlink($path.$linkfile);
-                  unlink($path.$linkfile.'.html');
-                  if($tieude != $confimtieude)
-                  {
-                    if($counttd ==0)
-                    {
-                      $update->tieude = $tieude;
-                      $update ->filename = $filename;
-                      $update ->imgname = $imgname;
-                      
-                      $chuyendoi = new chuyendoihtml();
-                      $link = 'tindoanthe/vanban';
-                      $chuyendoi->chuyendoi($link,$file);
-
-                      $file->move('tindoanthe/vanban',$filename);
-                      $img->move('tindoanthe/img',$imgname);
-
-                      $update->save();
-                      return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
-                    }
-                    else
-                    {
-                      return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                    }
                   }
                   else
                   {
                     $update ->filename = $filename;
                     $update ->imgname = $imgname;
-                    
+
                     $chuyendoi = new chuyendoihtml();
-                    $link = 'tindoanthe/vanban';
+                    $link = 'congdoan/vanban';
                     $chuyendoi->chuyendoi($link,$file);
 
-                    $file->move('tindoanthe/vanban',$filename);
-                    $img->move('tindoanthe/img',$imgname);
+                    $file->move('congdoan/vanban',$filename);
+                    $img->move('congdoan/img',$imgname);
 
                     $update->save();
-                    return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                    return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
                   }
                 
                   
@@ -1878,45 +1337,41 @@ public function PaddTN (Request $request)
             else if(isset($file))
             {
               $filename = $file->getClientOriginalName();
-              $counttf = tindoanthe::where('filename',$filename)->count();
+              $counttf = congdoan::where('filename',$filename)->count();
               if($counttf ==0)
               {
-                
-                $linkfile ='/tindoanthe/vanban/'.$update->filename;
+                $linkfile ='/congdoan/vanban/'.$update->filename;
                 $path = str_replace('\\','/',public_path());
+
                 unlink($path.$linkfile);
                 unlink($path.$linkfile.'.html');
+
                 if($tieude != $confimtieude)
                 {
-                  if($counttd ==0)
-                  {
-                    $update->tieude = $tieude;
-                    $update ->filename = $filename;
+                  
+                  $update->tieude = $tieude;
+                  $update ->filename = $filename;
+                  
+                  $chuyendoi = new chuyendoihtml();
+                  $link = 'congdoan/vanban';
+                  $chuyendoi->chuyendoi($link,$file);
 
-                    $chuyendoi = new chuyendoihtml();
-                    $link = 'tindoanthe/vanban';
-                    $chuyendoi->chuyendoi($link,$file);
-      
-                    $file->move('tindoanthe/vanban',$filename);
-                    $update->save();
-                    return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
-                  }
-                  else
-                  {
-                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                  }
+                  $file->move('congdoan/vanban',$filename);
+                  $update->save();
+                  return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
+                
                 }
                 else
                 {
                   $update ->filename = $filename;
-
+                  
                   $chuyendoi = new chuyendoihtml();
-                  $link = 'tindoanthe/vanban';
+                  $link = 'congdoan/vanban';
                   $chuyendoi->chuyendoi($link,$file);
-    
-                  $file->move('tindoanthe/vanban',$filename);
+
+                  $file->move('congdoan/vanban',$filename);
                   $update->save();
-                  return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                  return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
                 }
                 
               }
@@ -1928,37 +1383,31 @@ public function PaddTN (Request $request)
             else if(isset($img))
             {
               $imgname = $img->getClientOriginalName();
-              $countimg = tindoanthe::where('imgname',$imgname)->count();
+              $countimg = congdoan::where('imgname',$imgname)->count();
               if($countimg ==0)
               {
-              
-                $linkimg ='/tindoanthe/img/'.$update->imgname;
+                $linkimg ='/congdoan/img/'.$update->imgname;
                 $path = str_replace('\\','/',public_path());
                 unlink($path.$linkimg);
                 if($tieude != $confimtieude)
                 {
-                  if($counttd ==0)
-                  {
-                    $update->tieude = $tieude;
-                    $update ->imgname = $imgname;
-      
-                    $img->move('tindoanthe/img',$imgname);
-                    $update->save();
-                    return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
-                  }
-                  else
-                  {
-                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-                  }
+                
+                  $update->tieude = $tieude;
+                  $update ->imgname = $imgname;
+
+                  $img->move('congdoan/img',$imgname);
+                  $update->save();
+                  return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
+                  
 
                 }
                 else
                 {
                   $update ->imgname = $imgname;
     
-                  $img->move('tindoanthe/img',$imgname);
+                  $img->move('congdoan/img',$imgname);
                   $update->save();
-                  return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                  return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
                 }            
               }
               else
@@ -1970,7 +1419,405 @@ public function PaddTN (Request $request)
             {
               $update->tieude = $tieude;
               $update->save();
-              return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+              return redirect('admin/quan-ly-tin-cong-doan')->with('thongbao','Update thành công');
+            }
+          }
+          catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
+
+      break;
+
+      case "hdngoaigio";
+        $update = hdngoaigiolenlop::find($id);
+        $this->validate($request,
+          [
+              'tieude'=> 'required|max:500',
+          ],
+          [
+            'required' => ':attribute Không được để trống',
+            'max' => ':attribute Không được lớn hơn :max',   
+          ],
+          [
+            'tieude' => 'Tiêu Đề',
+          ]);
+          try
+          {
+            $tieude = $request ->tieude;
+            $file =$request -> file;
+            $img = $request ->img;
+            $confimtieude = $update ->tieude;
+            $counttd = hdngoaigiolenlop::where('tieude',$tieude)->count();
+            
+            if(isset($file)&isset($img))
+            {
+              $filename = $file->getClientOriginalName();
+              $imgname = $img->getClientOriginalName();
+
+              $counttf = hdngoaigiolenlop::where('filename',$filename)->count();
+              $countimg = hdngoaigiolenlop::where('imgname',$imgname)->count();
+              if($counttf ==0)
+              {
+                if($countimg ==0)
+                {
+                  
+                  $linkimg ='/hdngoaigiolenlop/img/'.$update->imgname;
+                  $linkfile ='/hdngoaigiolenlop/vanban/'.$update->filename;
+                  $path = str_replace('\\','/',public_path());
+                  unlink($path.$linkimg);
+                  unlink($path.$linkfile);
+                  unlink($path.$linkfile.'.html');
+                  if($tieude != $confimtieude)
+                  {
+                    if($counttd ==0)
+                    {
+                      $update->tieude = $tieude;
+                      $update ->filename = $filename;
+                      $update ->imgname = $imgname;
+                      
+                      $chuyendoi = new chuyendoihtml();
+                      $link = 'hdngoaigiolenlop/vanban';
+                      $chuyendoi->chuyendoi($link,$file);
+
+                      
+                      $file->move('hdngoaigiolenlop/vanban',$filename);
+                      $img->move('hdngoaigiolenlop/img',$imgname);
+
+                      $update->save();
+                      return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
+                    }
+                    else
+                    {
+                      return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                    }
+                  }
+                  else
+                  {
+                    $update ->filename = $filename;
+                    $update ->imgname = $imgname;
+
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'hdngoaigiolenlop/vanban';
+                    $chuyendoi->chuyendoi($link,$file);
+
+                    $file->move('hdngoaigiolenlop/vanban',$filename);
+                    $img->move('hdngoaigiolenlop/img',$imgname);
+
+                    $update->save();
+                    return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
+                  }
+                
+                  
+                }
+                else
+                {
+                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên ảnh đã tồn tại');
+                }  
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đã tồn tại');
+              }
+
+            }
+            else if(isset($file))
+            {
+              $filename = $file->getClientOriginalName();
+              $counttf = hdngoaigiolenlop::where('filename',$filename)->count();
+              if($counttf ==0)
+              {
+                
+                $linkfile ='/hdngoaigiolenlop/vanban/'.$update->filename;
+                $path = str_replace('\\','/',public_path());
+                unlink($path.$linkfile);
+                unlink($path.$linkfile.'.html');
+                if($tieude != $confimtieude)
+                {
+                  if($counttd ==0)
+                  {
+                    $update->tieude = $tieude;
+                    $update ->filename = $filename;
+      
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'hdngoaigiolenlop/vanban';
+                    $chuyendoi->chuyendoi($link,$file);
+
+                    $file->move('hdngoaigiolenlop/vanban',$filename);
+                    $update->save();
+                    return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                  }
+                }
+                else
+                {
+                  $update ->filename = $filename;
+    
+                  $chuyendoi = new chuyendoihtml();
+                  $link = 'hdngoaigiolenlop/vanban';
+                  $chuyendoi->chuyendoi($link,$file);
+
+                  $file->move('hdngoaigiolenlop/vanban',$filename);
+                  $update->save();
+                  return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
+                }
+                
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+              }  
+            }
+            else if(isset($img))
+            {
+              $imgname = $img->getClientOriginalName();
+              $countimg = hdngoaigiolenlop::where('imgname',$imgname)->count();
+              if($countimg ==0)
+              {
+              
+                $linkimg ='/hdngoaigiolenlop/img/'.$update->imgname;
+                $path = str_replace('\\','/',public_path());
+                unlink($path.$linkimg);
+                if($tieude != $confimtieude)
+                {
+                  if($counttd ==0)
+                  {
+                    $update->tieude = $tieude;
+                    $update ->imgname = $imgname;
+      
+                    $img->move('hdngoaigiolenlop/img',$imgname);
+                    $update->save();
+                    return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                  }
+
+                }
+                else
+                {
+                  $update ->imgname = $imgname;
+    
+                  $img->move('hdngoaigiolenlop/img',$imgname);
+                  $update->save();
+                  return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
+                }            
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Ảnh này đã tồn tại');
+              }  
+            }
+            else
+            {
+              $update->tieude = $tieude;
+              $update->save();
+              return redirect('admin/quan-ly-tin-hdngoaigiolenlop')->with('thongbao','Update thành công');
+            }
+          }
+          catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
+      break;
+
+      case "tindoanthe";
+      
+          $update = tindoanthe::find($id);
+          $this->validate($request,
+            [
+              'tieude'=> 'required|max:500',
+            ],
+            [
+              'required' => ':attribute Không được để trống',
+              'max' => ':attribute Không được lớn hơn :max',   
+            ],
+            [
+              'tieude' => 'Tiêu Đề',
+            ]);
+            try
+            {
+              $tieude = $request ->tieude;
+              $file =$request -> file;
+              $img = $request ->img;
+              $confimtieude = $update ->tieude;
+              $counttd = tindoanthe::where('tieude',$tieude)->count();
+              
+              if(isset($file)&isset($img))
+              {
+                $filename = $file->getClientOriginalName();
+                $imgname = $img->getClientOriginalName();
+
+                $counttf = tindoanthe::where('filename',$filename)->count();
+                $countimg = tindoanthe::where('imgname',$imgname)->count();
+                if($counttf ==0)
+                {
+                  if($countimg ==0)
+                  {
+                    
+                    $linkimg ='/tindoanthe/img/'.$update->imgname;
+                    $linkfile ='/tindoanthe/vanban/'.$update->filename;
+                    $path = str_replace('\\','/',public_path());
+                    unlink($path.$linkimg);
+                    unlink($path.$linkfile);
+                    unlink($path.$linkfile.'.html');
+                    if($tieude != $confimtieude)
+                    {
+                      if($counttd ==0)
+                      {
+                        $update->tieude = $tieude;
+                        $update ->filename = $filename;
+                        $update ->imgname = $imgname;
+                        
+                        $chuyendoi = new chuyendoihtml();
+                        $link = 'tindoanthe/vanban';
+                        $chuyendoi->chuyendoi($link,$file);
+
+                        $file->move('tindoanthe/vanban',$filename);
+                        $img->move('tindoanthe/img',$imgname);
+
+                        $update->save();
+                        return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                      }
+                      else
+                      {
+                        return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                      }
+                    }
+                    else
+                    {
+                      $update ->filename = $filename;
+                      $update ->imgname = $imgname;
+                      
+                      $chuyendoi = new chuyendoihtml();
+                      $link = 'tindoanthe/vanban';
+                      $chuyendoi->chuyendoi($link,$file);
+
+                      $file->move('tindoanthe/vanban',$filename);
+                      $img->move('tindoanthe/img',$imgname);
+
+                      $update->save();
+                      return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                    }
+                  
+                    
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+                  }  
+                }
+                else
+                {
+                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên ảnh trùng');
+                }
+
+              }
+              else if(isset($file))
+              {
+                $filename = $file->getClientOriginalName();
+                $counttf = tindoanthe::where('filename',$filename)->count();
+                if($counttf ==0)
+                {
+                  
+                  $linkfile ='/tindoanthe/vanban/'.$update->filename;
+                  $path = str_replace('\\','/',public_path());
+                  unlink($path.$linkfile);
+                  unlink($path.$linkfile.'.html');
+                  if($tieude != $confimtieude)
+                  {
+                    if($counttd ==0)
+                    {
+                      $update->tieude = $tieude;
+                      $update ->filename = $filename;
+
+                      $chuyendoi = new chuyendoihtml();
+                      $link = 'tindoanthe/vanban';
+                      $chuyendoi->chuyendoi($link,$file);
+        
+                      $file->move('tindoanthe/vanban',$filename);
+                      $update->save();
+                      return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                    }
+                    else
+                    {
+                      return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                    }
+                  }
+                  else
+                  {
+                    $update ->filename = $filename;
+
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'tindoanthe/vanban';
+                    $chuyendoi->chuyendoi($link,$file);
+      
+                    $file->move('tindoanthe/vanban',$filename);
+                    $update->save();
+                    return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                  }
+                  
+                }
+                else
+                {
+                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+                }  
+              }
+              else if(isset($img))
+              {
+                $imgname = $img->getClientOriginalName();
+                $countimg = tindoanthe::where('imgname',$imgname)->count();
+                if($countimg ==0)
+                {
+                
+                  $linkimg ='/tindoanthe/img/'.$update->imgname;
+                  $path = str_replace('\\','/',public_path());
+                  unlink($path.$linkimg);
+                  if($tieude != $confimtieude)
+                  {
+                    if($counttd ==0)
+                    {
+                      $update->tieude = $tieude;
+                      $update ->imgname = $imgname;
+        
+                      $img->move('tindoanthe/img',$imgname);
+                      $update->save();
+                      return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                    }
+                    else
+                    {
+                      return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                    }
+
+                  }
+                  else
+                  {
+                    $update ->imgname = $imgname;
+      
+                    $img->move('tindoanthe/img',$imgname);
+                    $update->save();
+                    return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+                  }            
+                }
+                else
+                {
+                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Ảnh này đã tồn tại');
+                }  
+              }
+              else
+              {
+                $update->tieude = $tieude;
+                $update->save();
+                return redirect('admin/quan-ly-tin-doan-the')->with('thongbao','Update thành công');
+              }
+            }
+            catch(\Exception $exception)
+            {
+              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
             }
       break;
 
@@ -1988,6 +1835,8 @@ public function PaddTN (Request $request)
             [
               'tieude' => 'Tiêu Đề',
             ]);
+        try
+        {
             $tieude = $request ->tieude;
             $file =$request -> file;
             $img = $request ->img;
@@ -2161,6 +2010,11 @@ public function PaddTN (Request $request)
               $update->save();
               return redirect('admin/quan-ly-tin-moi-nhat')->with('thongbao','Update thành công');
             }
+          }
+          catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
       break;
 
       case "tinnhanh";
@@ -2177,19 +2031,75 @@ public function PaddTN (Request $request)
         [
           'tieude' => 'Tiêu Đề',
         ]);
-        $tieude = $request ->tieude;
-        $file =$request -> file;
-        $confimtieude = $update ->tieude;
-        $counttd = tinnhanh::where('tieude',$tieude)->count();
-        
-        if(isset($file)&isset($img))
+        try
         {
-          $filename = $file->getClientOriginalName();
-          $imgname = $img->getClientOriginalName();
-
-          $counttf = tinnhanh::where('filename',$filename)->count();
-          if($counttf ==0)
+          $tieude = $request ->tieude;
+          $file =$request -> file;
+          $confimtieude = $update ->tieude;
+          $counttd = tinnhanh::where('tieude',$tieude)->count();
+          
+          if(isset($file)&isset($img))
           {
+            $filename = $file->getClientOriginalName();
+            $imgname = $img->getClientOriginalName();
+
+            $counttf = tinnhanh::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+                $linkfile ='/tinnhanh'.$update->filename;
+                $path = str_replace('\\','/',public_path());
+                unlink($path.$linkfile);
+                unlink($path.$linkfile.'.html');
+                if($tieude != $confimtieude)
+                {
+                  if($counttd ==0)
+                  {
+                    $update->tieude = $tieude;
+                    $update ->filename = $filename;
+                    $update ->imgname = $imgname;
+
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'tinnhanh';
+                    $chuyendoi->chuyendoi($link,$file);
+                    
+                    $file->move('tinnhanh',$filename);
+                  
+
+                    $update->save();
+                    return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                  }
+                }
+                else
+                {
+                  $update ->filename = $filename;
+
+                  $chuyendoi = new chuyendoihtml();
+                  $link = 'tinnhanh';
+                  $chuyendoi->chuyendoi($link,$file);
+
+                  $file->move('tinnhanh',$filename);
+                  
+                  $update->save();
+                  return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
+                }
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+              }  
+
+          }
+          else if(isset($file))
+          {
+            $filename = $file->getClientOriginalName();
+            $counttf = tinnhanh::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+              
               $linkfile ='/tinnhanh'.$update->filename;
               $path = str_replace('\\','/',public_path());
               unlink($path.$linkfile);
@@ -2200,15 +2110,12 @@ public function PaddTN (Request $request)
                 {
                   $update->tieude = $tieude;
                   $update ->filename = $filename;
-                  $update ->imgname = $imgname;
 
                   $chuyendoi = new chuyendoihtml();
                   $link = 'tinnhanh';
                   $chuyendoi->chuyendoi($link,$file);
-                  
+    
                   $file->move('tinnhanh',$filename);
-                
-
                   $update->save();
                   return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
                 }
@@ -2226,73 +2133,27 @@ public function PaddTN (Request $request)
                 $chuyendoi->chuyendoi($link,$file);
 
                 $file->move('tinnhanh',$filename);
-                
                 $update->save();
                 return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
               }
+              
             }
             else
             {
               return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
             }  
-
-        }
-        else if(isset($file))
-        {
-          $filename = $file->getClientOriginalName();
-          $counttf = tinnhanh::where('filename',$filename)->count();
-          if($counttf ==0)
-          {
-            
-            $linkfile ='/tinnhanh'.$update->filename;
-            $path = str_replace('\\','/',public_path());
-            unlink($path.$linkfile);
-            unlink($path.$linkfile.'.html');
-            if($tieude != $confimtieude)
-            {
-              if($counttd ==0)
-              {
-                $update->tieude = $tieude;
-                $update ->filename = $filename;
-
-                $chuyendoi = new chuyendoihtml();
-                $link = 'tinnhanh';
-                $chuyendoi->chuyendoi($link,$file);
-  
-                $file->move('tinnhanh',$filename);
-                $update->save();
-                return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
-              }
-              else
-              {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-              }
-            }
-            else
-            {
-              $update ->filename = $filename;
-
-              $chuyendoi = new chuyendoihtml();
-              $link = 'tinnhanh';
-              $chuyendoi->chuyendoi($link,$file);
-
-              $file->move('tinnhanh',$filename);
-              $update->save();
-              return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
-            }
-            
           }
           else
           {
-            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-          }  
+            $update->tieude = $tieude;
+            $update->save();
+            return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
+          }
         }
-        else
-        {
-          $update->tieude = $tieude;
-          $update->save();
-          return redirect('admin/quan-ly-tin-nhanh')->with('thongbao','Update thành công');
-        }
+        catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
       break;
       
       case "tinnhatruong";
@@ -2309,35 +2170,57 @@ public function PaddTN (Request $request)
         [
           'tieude' => 'Tiêu Đề',
         ]);
-        $tieude = $request ->tieude;
-        $file =$request -> file;
-        $img = $request ->img;
-        $confimtieude = $update ->tieude;
-        $counttd = tinnhatruong::where('tieude',$tieude)->count();
-        
-        if(isset($file)&isset($img))
+        try
         {
-          $filename = $file->getClientOriginalName();
-          $imgname = $img->getClientOriginalName();
-
-          $counttf = tinnhatruong::where('filename',$filename)->count();
-          $countimg = tinnhatruong::where('imgname',$imgname)->count();
-          if($counttf ==0)
+          $tieude = $request ->tieude;
+          $file =$request -> file;
+          $img = $request ->img;
+          $confimtieude = $update ->tieude;
+          $counttd = tinnhatruong::where('tieude',$tieude)->count();
+          
+          if(isset($file)&isset($img))
           {
-            if($countimg ==0)
+            $filename = $file->getClientOriginalName();
+            $imgname = $img->getClientOriginalName();
+
+            $counttf = tinnhatruong::where('filename',$filename)->count();
+            $countimg = tinnhatruong::where('imgname',$imgname)->count();
+            if($counttf ==0)
             {
-              
-              $linkimg ='/tinnhatruong/img/'.$update->imgname;
-              $linkfile ='/tinnhatruong/vanban/'.$update->filename;
-              $path = str_replace('\\','/',public_path());
-              unlink($path.$linkimg);
-              unlink($path.$linkfile);
-              unlink($path.$linkfile.'.html');
-              if($tieude != $confimtieude)
+              if($countimg ==0)
               {
-                if($counttd ==0)
+                
+                $linkimg ='/tinnhatruong/img/'.$update->imgname;
+                $linkfile ='/tinnhatruong/vanban/'.$update->filename;
+                $path = str_replace('\\','/',public_path());
+                unlink($path.$linkimg);
+                unlink($path.$linkfile);
+                unlink($path.$linkfile.'.html');
+                if($tieude != $confimtieude)
                 {
-                  $update->tieude = $tieude;
+                  if($counttd ==0)
+                  {
+                    $update->tieude = $tieude;
+                    $update ->filename = $filename;
+                    $update ->imgname = $imgname;
+
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'tinnhatruong/vanban';
+                    $chuyendoi->chuyendoi($link,$file);
+                    
+                    $file->move('tinnhatruong/vanban',$filename);
+                    $img->move('tinnhatruong/img',$imgname);
+
+                    $update->save();
+                    return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                  }
+                }
+                else
+                {
                   $update ->filename = $filename;
                   $update ->imgname = $imgname;
 
@@ -2351,6 +2234,46 @@ public function PaddTN (Request $request)
                   $update->save();
                   return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
                 }
+              
+                
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+              }  
+            }
+            else
+            {
+              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên ảnh trùng');
+            }
+
+          }
+          else if(isset($file))
+          {
+            $filename = $file->getClientOriginalName();
+            $counttf = tinnhatruong::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+              
+              $linkfile ='/tinnhatruong/vanban/'.$update->filename;
+              $path = str_replace('\\','/',public_path());
+              unlink($path.$linkfile);
+              unlink($path.$linkfile.'.html');
+              if($tieude != $confimtieude)
+              {
+                if($counttd ==0)
+                {
+                  $update->tieude = $tieude;
+                  $update ->filename = $filename;
+
+                  $chuyendoi = new chuyendoihtml();
+                  $link = 'tinnhatruong/vanban';
+                  $chuyendoi->chuyendoi($link,$file);
+    
+                  $file->move('tinnhatruong/vanban',$filename);
+                  $update->save();
+                  return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
+                }
                 else
                 {
                   return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
@@ -2359,19 +2282,15 @@ public function PaddTN (Request $request)
               else
               {
                 $update ->filename = $filename;
-                $update ->imgname = $imgname;
 
                 $chuyendoi = new chuyendoihtml();
                 $link = 'tinnhatruong/vanban';
                 $chuyendoi->chuyendoi($link,$file);
-                
-                $file->move('tinnhatruong/vanban',$filename);
-                $img->move('tinnhatruong/img',$imgname);
 
+                $file->move('tinnhatruong/vanban',$filename);
                 $update->save();
                 return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
               }
-            
               
             }
             else
@@ -2379,109 +2298,58 @@ public function PaddTN (Request $request)
               return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
             }  
           }
-          else
+          else if(isset($img))
           {
-            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên ảnh trùng');
-          }
-
-        }
-        else if(isset($file))
-        {
-          $filename = $file->getClientOriginalName();
-          $counttf = tinnhatruong::where('filename',$filename)->count();
-          if($counttf ==0)
-          {
-            
-            $linkfile ='/tinnhatruong/vanban/'.$update->filename;
-            $path = str_replace('\\','/',public_path());
-            unlink($path.$linkfile);
-            unlink($path.$linkfile.'.html');
-            if($tieude != $confimtieude)
+            $imgname = $img->getClientOriginalName();
+            $countimg = tinnhatruong::where('imgname',$imgname)->count();
+            if($countimg ==0)
             {
-              if($counttd ==0)
+            
+              $linkimg ='/tinnhatruong/img/'.$update->imgname;
+              $path = str_replace('\\','/',public_path());
+              unlink($path.$linkimg);
+              if($tieude != $confimtieude)
               {
-                $update->tieude = $tieude;
-                $update ->filename = $filename;
+                if($counttd ==0)
+                {
+                  $update->tieude = $tieude;
+                  $update ->imgname = $imgname;
+    
+                  $img->move('tinnhatruong/img',$imgname);
+                  $update->save();
+                  return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
+                }
+                else
+                {
+                  return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                }
 
-                $chuyendoi = new chuyendoihtml();
-                $link = 'tinnhatruong/vanban';
-                $chuyendoi->chuyendoi($link,$file);
-  
-                $file->move('tinnhatruong/vanban',$filename);
-                $update->save();
-                return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
               }
               else
               {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-              }
-            }
-            else
-            {
-              $update ->filename = $filename;
-
-              $chuyendoi = new chuyendoihtml();
-              $link = 'tinnhatruong/vanban';
-              $chuyendoi->chuyendoi($link,$file);
-
-              $file->move('tinnhatruong/vanban',$filename);
-              $update->save();
-              return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
-            }
-            
-          }
-          else
-          {
-            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-          }  
-        }
-        else if(isset($img))
-        {
-          $imgname = $img->getClientOriginalName();
-          $countimg = tinnhatruong::where('imgname',$imgname)->count();
-          if($countimg ==0)
-          {
-          
-            $linkimg ='/tinnhatruong/img/'.$update->imgname;
-            $path = str_replace('\\','/',public_path());
-            unlink($path.$linkimg);
-            if($tieude != $confimtieude)
-            {
-              if($counttd ==0)
-              {
-                $update->tieude = $tieude;
                 $update ->imgname = $imgname;
-  
+
                 $img->move('tinnhatruong/img',$imgname);
                 $update->save();
                 return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
-              }
-              else
-              {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-              }
-
+              }            
             }
             else
             {
-              $update ->imgname = $imgname;
-
-              $img->move('tinnhatruong/img',$imgname);
-              $update->save();
-              return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
-            }            
+              return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Ảnh này đã tồn tại');
+            }  
           }
           else
           {
-            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Ảnh này đã tồn tại');
-          }  
+            $update->tieude = $tieude;
+            $update->save();
+            return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
+          }
         }
-        else
-        {
-          $update->tieude = $tieude;
-          $update->save();
-          return redirect('admin/quan-ly-tin-nha-truong')->with('thongbao','Update thành công');
-        }
+        catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
       break;
 
       case "vbcs";
@@ -2499,23 +2367,86 @@ public function PaddTN (Request $request)
         [
           'tieude' => 'Tiêu Đề',
         ]);
-        $tieude = $request ->tieude;
-        $file =$request -> file;
-
-        $now = getdate();
-        $ngay = $now["mday"];
-        $thang = $now["mon"];
-        $nam = $now["year"];
-
-        $confimtieude = $update ->tieude;
-        $counttd = vanbancapso::where('tieude',$tieude)->count();
-        
-        if(isset($file)&isset($img))
+        try
         {
-          $filename = $file->getClientOriginalName();
-          $counttf = vanbancapso::where('filename',$filename)->count();
-          if($counttf ==0)
+          $tieude = $request ->tieude;
+          $file =$request -> file;
+
+          $now = getdate();
+          $ngay = $now["mday"];
+          $thang = $now["mon"];
+          $nam = $now["year"];
+
+          $confimtieude = $update ->tieude;
+          $counttd = vanbancapso::where('tieude',$tieude)->count();
+          
+          if(isset($file)&isset($img))
           {
+            $filename = $file->getClientOriginalName();
+            $counttf = vanbancapso::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+                $linkfile ='/vanbancapso/'.$update->filename;
+                $path = str_replace('\\','/',public_path());
+                unlink($path.$linkfile);
+                unlink($path.$linkfile.'.html');
+                if($tieude != $confimtieude)
+                {
+                  if($counttd ==0)
+                  {
+                    $update->tieude = $tieude;
+                    $update ->filename = $filename;
+                    $update ->imgname = $imgname;
+                    $update->ngay = $ngay;
+                    $update->thang = $thang;
+                    $update->nam = $nam;
+
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'vanbancapso';
+                    $chuyendoi->chuyendoi($link,$file);
+                    
+                    $file->move('vanbancapso',$filename);
+                  
+
+                    $update->save();
+                    return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                  }
+                }
+                else
+                {
+                  $update ->filename = $filename;
+
+                  $update->ngay = $ngay;
+                  $update->thang = $thang;
+                  $update->nam = $nam;
+
+                  $chuyendoi = new chuyendoihtml();
+                  $link = 'vanbancapso';
+                  $chuyendoi->chuyendoi($link,$file);
+
+                  $file->move('vanbancapso',$filename);
+                  
+                  $update->save();
+                  return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
+                }
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+              }  
+
+          }
+          else if(isset($file))
+          {
+            $filename = $file->getClientOriginalName();
+            $counttf = vanbancapso::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+              
               $linkfile ='/vanbancapso/'.$update->filename;
               $path = str_replace('\\','/',public_path());
               unlink($path.$linkfile);
@@ -2526,18 +2457,14 @@ public function PaddTN (Request $request)
                 {
                   $update->tieude = $tieude;
                   $update ->filename = $filename;
-                  $update ->imgname = $imgname;
                   $update->ngay = $ngay;
                   $update->thang = $thang;
                   $update->nam = $nam;
-
                   $chuyendoi = new chuyendoihtml();
                   $link = 'vanbancapso';
                   $chuyendoi->chuyendoi($link,$file);
-                  
-                  $file->move('vanbancapso',$filename);
-                
 
+                  $file->move('vanbancapso',$filename);
                   $update->save();
                   return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
                 }
@@ -2550,91 +2477,40 @@ public function PaddTN (Request $request)
               {
                 $update ->filename = $filename;
 
+                $chuyendoi = new chuyendoihtml();
+                $link = 'vanbancapso';
+                $chuyendoi->chuyendoi($link,$file);
                 $update->ngay = $ngay;
                 $update->thang = $thang;
                 $update->nam = $nam;
 
-                $chuyendoi = new chuyendoihtml();
-                $link = 'vanbancapso';
-                $chuyendoi->chuyendoi($link,$file);
-
                 $file->move('vanbancapso',$filename);
-                
                 $update->save();
                 return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
               }
+              
             }
             else
             {
               return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
             }  
-
-        }
-        else if(isset($file))
-        {
-          $filename = $file->getClientOriginalName();
-          $counttf = vanbancapso::where('filename',$filename)->count();
-          if($counttf ==0)
-          {
-            
-            $linkfile ='/vanbancapso/'.$update->filename;
-            $path = str_replace('\\','/',public_path());
-            unlink($path.$linkfile);
-            unlink($path.$linkfile.'.html');
-            if($tieude != $confimtieude)
-            {
-              if($counttd ==0)
-              {
-                $update->tieude = $tieude;
-                $update ->filename = $filename;
-                $update->ngay = $ngay;
-                $update->thang = $thang;
-                $update->nam = $nam;
-                $chuyendoi = new chuyendoihtml();
-                $link = 'vanbancapso';
-                $chuyendoi->chuyendoi($link,$file);
-
-                $file->move('vanbancapso',$filename);
-                $update->save();
-                return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
-              }
-              else
-              {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-              }
-            }
-            else
-            {
-              $update ->filename = $filename;
-
-              $chuyendoi = new chuyendoihtml();
-              $link = 'vanbancapso';
-              $chuyendoi->chuyendoi($link,$file);
-              $update->ngay = $ngay;
-              $update->thang = $thang;
-              $update->nam = $nam;
-
-              $file->move('vanbancapso',$filename);
-              $update->save();
-              return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
-            }
-            
           }
           else
           {
-            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-          }  
+            $update->tieude = $tieude;
+            $update->ngay = $ngay;
+            $update->thang = $thang;
+            $update->nam = $nam;
+            $update->save();
+            return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
+          }
         }
-        else
-        {
-          $update->tieude = $tieude;
-          $update->ngay = $ngay;
-          $update->thang = $thang;
-          $update->nam = $nam;
-          $update->save();
-          return redirect('admin/quan-ly-van-ban-cap-so')->with('thongbao','Update thành công');
-        }
+        catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
       break; 
+
       case "vbmoi";
         
         $update = vanbanmoi::find($id);
@@ -2649,17 +2525,74 @@ public function PaddTN (Request $request)
         [
           'tieude' => 'Tiêu Đề',
         ]);
-        $tieude = $request ->tieude;
-        $file =$request -> file;
-        $confimtieude = $update ->tieude;
-        $counttd = vanbanmoi::where('tieude',$tieude)->count();
-        
-        if(isset($file)&isset($img))
+        try
         {
-          $filename = $file->getClientOriginalName();
-          $counttf = vanbanmoi::where('filename',$filename)->count();
-          if($counttf ==0)
+          $tieude = $request ->tieude;
+          $file =$request -> file;
+          $confimtieude = $update ->tieude;
+          $counttd = vanbanmoi::where('tieude',$tieude)->count();
+          
+          if(isset($file)&isset($img))
           {
+            $filename = $file->getClientOriginalName();
+            $counttf = vanbanmoi::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+                $linkfile ='/vanbanmoi/'.$update->filename;
+                $path = str_replace('\\','/',public_path());
+                unlink($path.$linkfile);
+                unlink($path.$linkfile.'.html');
+                if($tieude != $confimtieude)
+                {
+                  if($counttd ==0)
+                  {
+                    $update->tieude = $tieude;
+                    $update ->filename = $filename;
+                    $update ->imgname = $imgname;
+
+                    
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'vanbanmoi';
+                    $chuyendoi->chuyendoi($link,$file);
+                    
+                    $file->move('vanbanmoi',$filename);
+                  
+
+                    $update->save();
+                    return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                  }
+                }
+                else
+                {
+                  $update ->filename = $filename;
+
+                  $chuyendoi = new chuyendoihtml();
+                  $link = 'vanbanmoi';
+                  $chuyendoi->chuyendoi($link,$file);
+
+                  $file->move('vanbanmoi',$filename);
+                  
+                  $update->save();
+                  return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
+                }
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+              }  
+
+          }
+          else if(isset($file))
+          {
+            $filename = $file->getClientOriginalName();
+            $counttf = vanbanmoi::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+              
               $linkfile ='/vanbanmoi/'.$update->filename;
               $path = str_replace('\\','/',public_path());
               unlink($path.$linkfile);
@@ -2670,16 +2603,12 @@ public function PaddTN (Request $request)
                 {
                   $update->tieude = $tieude;
                   $update ->filename = $filename;
-                  $update ->imgname = $imgname;
 
-                  
                   $chuyendoi = new chuyendoihtml();
                   $link = 'vanbanmoi';
                   $chuyendoi->chuyendoi($link,$file);
-                  
+    
                   $file->move('vanbanmoi',$filename);
-                
-
                   $update->save();
                   return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
                 }
@@ -2697,74 +2626,29 @@ public function PaddTN (Request $request)
                 $chuyendoi->chuyendoi($link,$file);
 
                 $file->move('vanbanmoi',$filename);
-                
                 $update->save();
                 return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
               }
+              
             }
             else
             {
               return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
             }  
-
-        }
-        else if(isset($file))
-        {
-          $filename = $file->getClientOriginalName();
-          $counttf = vanbanmoi::where('filename',$filename)->count();
-          if($counttf ==0)
-          {
-            
-            $linkfile ='/vanbanmoi/'.$update->filename;
-            $path = str_replace('\\','/',public_path());
-            unlink($path.$linkfile);
-            unlink($path.$linkfile.'.html');
-            if($tieude != $confimtieude)
-            {
-              if($counttd ==0)
-              {
-                $update->tieude = $tieude;
-                $update ->filename = $filename;
-
-                $chuyendoi = new chuyendoihtml();
-                $link = 'vanbanmoi';
-                $chuyendoi->chuyendoi($link,$file);
-  
-                $file->move('vanbanmoi',$filename);
-                $update->save();
-                return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
-              }
-              else
-              {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-              }
-            }
-            else
-            {
-              $update ->filename = $filename;
-
-              $chuyendoi = new chuyendoihtml();
-              $link = 'vanbanmoi';
-              $chuyendoi->chuyendoi($link,$file);
-
-              $file->move('vanbanmoi',$filename);
-              $update->save();
-              return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
-            }
-            
           }
           else
           {
-            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-          }  
+            $update->tieude = $tieude;
+            $update->save();
+            return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
+          }
         }
-        else
-        {
-          $update->tieude = $tieude;
-          $update->save();
-          return redirect('admin/quan-ly-van-ban-moi')->with('thongbao','Update thành công');
-        }
+        catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
       break;
+
       case "vbt";
         
         $update = vanbantruong::find($id);
@@ -2779,23 +2663,86 @@ public function PaddTN (Request $request)
         [
           'tieude' => 'Tiêu Đề',
         ]);
-        $tieude = $request ->tieude;
-        $file =$request -> file;
-
-        $now = getdate();
-        $ngay = $now["mday"];
-        $thang = $now["mon"];
-        $nam = $now["year"];
-
-        $confimtieude = $update ->tieude;
-        $counttd = vanbantruong::where('tieude',$tieude)->count();
-        
-        if(isset($file)&isset($img))
+        try
         {
-          $filename = $file->getClientOriginalName();
-          $counttf = vanbantruong::where('filename',$filename)->count();
-          if($counttf ==0)
+          $tieude = $request ->tieude;
+          $file =$request -> file;
+
+          $now = getdate();
+          $ngay = $now["mday"];
+          $thang = $now["mon"];
+          $nam = $now["year"];
+
+          $confimtieude = $update ->tieude;
+          $counttd = vanbantruong::where('tieude',$tieude)->count();
+          
+          if(isset($file)&isset($img))
           {
+            $filename = $file->getClientOriginalName();
+            $counttf = vanbantruong::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+                $linkfile ='/vanbantruong/'.$update->filename;
+                $path = str_replace('\\','/',public_path());
+                unlink($path.$linkfile);
+                unlink($path.$linkfile.'.html');
+                if($tieude != $confimtieude)
+                {
+                  if($counttd ==0)
+                  {
+                    $update->tieude = $tieude;
+                    $update ->filename = $filename;
+                    $update ->imgname = $imgname;
+                    $update->ngay = $ngay;
+                    $update->thang = $thang;
+                    $update->nam = $nam;
+
+                    $chuyendoi = new chuyendoihtml();
+                    $link = 'vanbantruong';
+                    $chuyendoi->chuyendoi($link,$file);
+                    
+                    $file->move('vanbantruong',$filename);
+                  
+
+                    $update->save();
+                    return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
+                  }
+                  else
+                  {
+                    return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
+                  }
+                }
+                else
+                {
+                  $update ->filename = $filename;
+
+                  $update->ngay = $ngay;
+                  $update->thang = $thang;
+                  $update->nam = $nam;
+
+                  $chuyendoi = new chuyendoihtml();
+                  $link = 'vanbantruong';
+                  $chuyendoi->chuyendoi($link,$file);
+
+                  $file->move('vanbantruong',$filename);
+                  
+                  $update->save();
+                  return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
+                }
+              }
+              else
+              {
+                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
+              }  
+
+          }
+          else if(isset($file))
+          {
+            $filename = $file->getClientOriginalName();
+            $counttf = vanbantruong::where('filename',$filename)->count();
+            if($counttf ==0)
+            {
+              
               $linkfile ='/vanbantruong/'.$update->filename;
               $path = str_replace('\\','/',public_path());
               unlink($path.$linkfile);
@@ -2806,18 +2753,14 @@ public function PaddTN (Request $request)
                 {
                   $update->tieude = $tieude;
                   $update ->filename = $filename;
-                  $update ->imgname = $imgname;
                   $update->ngay = $ngay;
                   $update->thang = $thang;
                   $update->nam = $nam;
-
                   $chuyendoi = new chuyendoihtml();
                   $link = 'vanbantruong';
                   $chuyendoi->chuyendoi($link,$file);
-                  
+    
                   $file->move('vanbantruong',$filename);
-                
-
                   $update->save();
                   return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
                 }
@@ -2830,90 +2773,38 @@ public function PaddTN (Request $request)
               {
                 $update ->filename = $filename;
 
+                $chuyendoi = new chuyendoihtml();
+                $link = 'vanbantruong';
+                $chuyendoi->chuyendoi($link,$file);
                 $update->ngay = $ngay;
                 $update->thang = $thang;
                 $update->nam = $nam;
 
-                $chuyendoi = new chuyendoihtml();
-                $link = 'vanbantruong';
-                $chuyendoi->chuyendoi($link,$file);
-
                 $file->move('vanbantruong',$filename);
-                
                 $update->save();
                 return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
               }
+              
             }
             else
             {
               return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
             }  
-
-        }
-        else if(isset($file))
-        {
-          $filename = $file->getClientOriginalName();
-          $counttf = vanbantruong::where('filename',$filename)->count();
-          if($counttf ==0)
-          {
-            
-            $linkfile ='/vanbantruong/'.$update->filename;
-            $path = str_replace('\\','/',public_path());
-            unlink($path.$linkfile);
-            unlink($path.$linkfile.'.html');
-            if($tieude != $confimtieude)
-            {
-              if($counttd ==0)
-              {
-                $update->tieude = $tieude;
-                $update ->filename = $filename;
-                $update->ngay = $ngay;
-                $update->thang = $thang;
-                $update->nam = $nam;
-                $chuyendoi = new chuyendoihtml();
-                $link = 'vanbantruong';
-                $chuyendoi->chuyendoi($link,$file);
-  
-                $file->move('vanbantruong',$filename);
-                $update->save();
-                return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
-              }
-              else
-              {
-                return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên tiêu đề này đã tồn tại');
-              }
-            }
-            else
-            {
-              $update ->filename = $filename;
-
-              $chuyendoi = new chuyendoihtml();
-              $link = 'vanbantruong';
-              $chuyendoi->chuyendoi($link,$file);
-              $update->ngay = $ngay;
-              $update->thang = $thang;
-              $update->nam = $nam;
-
-              $file->move('vanbantruong',$filename);
-              $update->save();
-              return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
-            }
-            
           }
           else
           {
-            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Tên file đề này đã tồn tại');
-          }  
+            $update->tieude = $tieude;
+            $update->ngay = $ngay;
+            $update->thang = $thang;
+            $update->nam = $nam;
+            $update->save();
+            return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
+          }
         }
-        else
-        {
-          $update->tieude = $tieude;
-          $update->ngay = $ngay;
-          $update->thang = $thang;
-          $update->nam = $nam;
-          $update->save();
-          return redirect('admin/quan-ly-van-ban-truong')->with('thongbao','Update thành công');
-        }
+        catch(\Exception $exception)
+          {
+            return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+          }
       break;
 
       case "video";
@@ -2928,19 +2819,26 @@ public function PaddTN (Request $request)
           'max' => ':attribute Không được vượt quá 900M 1 video',
         ],
         [
-          'file' => 'Đường dẫn video',
+          'file' => 'Video tải lên',
         ]);
-        $file =$request -> file;
-        $filename = $file->getClientOriginalName();
+        try
+        {
+          $file =$request -> file;
+          $filename = $file->getClientOriginalName();
 
-        $linkfile ='/video/'.$update->link;
-        $path = str_replace('\\','/',public_path());
-        unlink($path.$linkfile);
+          $linkfile ='/video/'.$update->link;
+          $path = str_replace('\\','/',public_path());
+          unlink($path.$linkfile);
 
-        $update ->link = $filename;
-        $file->move('video',$filename);
-        $update->save();
-        return redirect('admin/video')->with('thongbao','Update thành công');
+          $update ->link = $filename;
+          $file->move('video',$filename);
+          $update->save();
+          return redirect('admin/video')->with('thongbao','Update thành công');
+        }
+        catch(\Exception $exception)
+        {
+          return redirect('admin/noidungsua/'.$id.'/key/'.$key)->with('thongbaoloi','Lỗi dữ liệu tải lên');
+        }
              
       break;
     } 

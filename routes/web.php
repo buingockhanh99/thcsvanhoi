@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/','ControllerUser@trangchu');
+Route::get('/','ControllerUser@trangchu')->name('thptvanhoi');
 
 
 
